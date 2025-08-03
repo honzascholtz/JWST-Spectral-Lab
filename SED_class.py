@@ -19,7 +19,7 @@ pi= np.pi
 e= np.e
 c= 3.*10**8
 
-fsz = gst.graph_format()
+fsz = gst.graph_format_official()
 
 import matplotlib.pyplot as plt
 import matplotlib.patches
@@ -36,7 +36,7 @@ wave = np.arange(0.05 * 1e4, 1* 5e4, 10.0)
 
 import sys
 sys.setrecursionlimit(1500)
-
+pth = sys.path[0]
 wave_grid = np.logspace(2,4,1000)
 
 class Viz_outreach:
@@ -58,7 +58,7 @@ class Viz_outreach:
 
         plt.subplots_adjust(hspace=0)
 
-        with pyfits.open('/Users/jansen/JADES/MSA_data/goods-s-deephst/prism_clear/10058975_prism_clear_v5.0_1D.fits') as hdu:
+        with pyfits.open(pth+'/Data/10058975_prism_clear_v5.0_1D.fits') as hdu:
             self.data_wave = hdu['WAVELENGTH'].data*1e6
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
@@ -168,7 +168,7 @@ class Viz_outreach:
         self.z = ydata
     
     def SF943_load(self, event):
-        with pyfits.open('/Users/jansen/JADES/MSA_data/goods-s-deephst/prism_clear/10058975_prism_clear_v5.0_1D.fits') as hdu:
+        with pyfits.open(pth+'/Data/10058975_prism_clear_v5.0_1D.fits') as hdu:
             self.data_wave = hdu['WAVELENGTH'].data*1e6
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
@@ -176,7 +176,7 @@ class Viz_outreach:
             self.plot_general()
         
     def QC_galaxy_load(self, event):
-        with pyfits.open('/Users/jansen/JADES/MSA_data/goods-s-ultradeep/prism_clear/199773_prism_clear_v5.0_1D.fits') as hdu:
+        with pyfits.open(pth+'/Data/199773_prism_clear_v5.0_1D.fits') as hdu:
             self.data_wave = hdu['WAVELENGTH'].data*1e6
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
@@ -184,14 +184,14 @@ class Viz_outreach:
             self.plot_general()
 
     def SF_galaxy_load(self, event):
-        with pyfits.open('/Users/jansen/JADES/MSA_data/goods-n-mediumjwst/prism_clear/000110_prism_clear_v5.0_1D.fits') as hdu:
+        with pyfits.open(pth+'/Data/000110_prism_clear_v5.0_1D.fits') as hdu:
             self.data_wave = hdu['WAVELENGTH'].data*1e6
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
 
             self.plot_general()
     def GSz14_load(self, event):
-        with pyfits.open('/Users/jansen/JADES/MSA_data/goods-s-deepjwst/prism_clear/183348_prism_clear_v5.0_1D.fits') as hdu:
+        with pyfits.open(pth+'/Data/183348_prism_clear_v5.0_1D.fits') as hdu:
             self.data_wave = hdu['WAVELENGTH'].data*1e6
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
@@ -365,11 +365,4 @@ class Viz_outreach:
                 bbox=dict(boxstyle='Round,pad=0.01', facecolor='white',
                             alpha=1.0, edgecolor='none'),
                 zorder=99,
-                )
-
-
-
-    
-
-inst = Viz_outreach()
-        
+                )        
