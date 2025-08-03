@@ -151,10 +151,15 @@ class Viz_outreach:
         self.GSz14 = Button(axbutton4, 'GSz14', color='lightblue', hovercolor='lightgreen')
         self.GSz14.on_clicked(self.GSz14_load)
 
-        # Buttons to load other GSz14
+        # Buttons to load other COS3018
         axbutton5 = plt.axes([0.5,0.9, 0.05,0.05])
         self.COS30 = Button(axbutton5, 'COS30', color='lightblue', hovercolor='lightgreen')
         self.COS30.on_clicked(self.COS30_load)
+
+        # Buttons to load other COS3018
+        axbutton6 = plt.axes([0.6,0.9, 0.05,0.05])
+        self.SF2 = Button(axbutton6, 'SF2', color='lightblue', hovercolor='lightgreen')
+        self.SF2.on_clicked(self.SF2_galaxy_load)
 
         self.generate_model()
         self.plot_general()
@@ -182,12 +187,21 @@ class Viz_outreach:
             self.plot_general()
 
     def SF_galaxy_load(self, event):
-        with pyfits.open(pth+'/Data/000110_prism_clear_v5.0_1D.fits') as hdu:
+        with pyfits.open(pth+'/Data/001882_prism_clear_v5.0_1D.fits') as hdu: #000110
             self.data_wave = hdu['WAVELENGTH'].data*1e6
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
 
             self.plot_general()
+    
+    def SF2_galaxy_load(self, event):
+        with pyfits.open(pth+'/Data/001927_prism_clear_v5.0_1D.fits') as hdu: #000110
+            self.data_wave = hdu['WAVELENGTH'].data*1e6
+            self.data_flux = hdu['DATA'].data*1e-7
+            self.data_error = hdu['ERR'].data*1e-7
+
+            self.plot_general()
+
     def GSz14_load(self, event):
         with pyfits.open(pth+'/Data/183348_prism_clear_v5.0_1D.fits') as hdu:
             self.data_wave = hdu['WAVELENGTH'].data*1e6
@@ -296,17 +310,20 @@ class Viz_outreach:
             self.ax0.text(0.05, 0.75,'Your stars are older than the Universe, reduce Age parameter!',\
                         transform = self.ax0.transAxes)
 
-            
-
         else:
-            self.ax0.plot(self.model.spectrum[:, 0]/1e4, self.model.spectrum[:, 1]/1e-18, color='darkblue', drawstyle='steps-mid')
+            self.ax0.plot(self.model.spectrum[:, 0]/1e4, self.model.spectrum[:, 1]/1e-18, color='firebrick', drawstyle='steps-mid')
+            self.ax0.fill_between(self.data_wave,  (self.data_flux-self.data_error)/1e-18,  (self.data_flux+self.data_error)/1e-18, \
+                                  color='lightgrey', alpha=0.5, step='mid')
+
             self.ax0.plot(self.data_wave, self.data_flux/1e-18, color='black', drawstyle='steps-mid')
 
             self.axres.plot(self.data_wave, (self.data_flux-self.model.spectrum[:, 1])/self.data_error, color='black', drawstyle='steps-mid')
+            self.axres.fill_between(self.data_wave, -self.data_error/1e-18, self.data_error/1e-18, color='lightgrey', alpha=0.5, step='mid')
             self.axres.axhline(0, color='red', lw=1.5, ls='--')
 
             self.ax0.set_ylabel("Flux [10$^{-18}$ erg/s/cm$^2$/Å]")
             self.axres.set_xlabel("Wavelength [microns]")
+            self.axres.set_ylabel("Residuals [sigma]")
             self.ax0.set_xlim(0.5, 5.3)
 
             self.score = np.nansum((self.data_flux- self.model.spectrum[:, 1])**2/self.data_error**2)/(len(self.data_flux)-6)
