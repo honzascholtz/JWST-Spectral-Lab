@@ -3,7 +3,7 @@
 
 SED Fitter is an outreach activity designed to show students and the general public how SED fitting works and what can we learn from a spectrum. The entire thing is a wrapper around Bagpipes to create a best fitting model to various JWST prism spectra. 
 
-![alt text](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Logo Title Text 1")
+![alt text](https://github.com/honzascholtz/SED_Fitter/blob/main/Images/UI.png "Example of the UI")
 
 
 # How to run 
