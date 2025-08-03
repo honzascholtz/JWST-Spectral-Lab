@@ -10,7 +10,7 @@ SED Fitter is an outreach activity designed to show students and the general pub
 
 In order to run the code we need to install Bagpipes from Adam Carnall. You can find more info about Bagpipes <a href="https://bagpipes.readthedocs.io/en/latest/" target=_blank>here</a>.
 
-```
+```python
 pip install bagpipes
 
 python SED_fitter.py
