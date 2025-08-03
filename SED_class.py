@@ -48,6 +48,9 @@ class Viz_outreach:
         -------
         """
 
+        import Check_setup as grid_check
+        grid_check.check_setup()
+
         self.fig = plt.figure(figsize=(15.6, 8))
         self.fig.canvas.manager.set_window_title('vicube')
         gs = self.fig.add_gridspec(

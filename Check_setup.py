@@ -32,7 +32,7 @@ def check_setup():
         answer = input()
         
         if answer== 'yes' or answer == 'Yes':
-            local_pth = sys.path[0]+'Grids'
+            local_pth = sys.path[0]+'/Grids'
             
             # Backing up the old grids just in case
             os.system(f'mkdir -p {path_bagpipes+"/models/grids/old"}')
@@ -46,14 +46,12 @@ def check_setup():
             print(f'Old grids backed up to {path_bagpipes}/models/grids/old')
 
             # Now copying over the new grids
-            input_path = os.path.join(local_pth, 'Grids/bc03_miles_nebular_line_grids.fits')
+            input_path = os.path.join(local_pth, 'bc03_miles_nebular_line_grids.fits')
             os.system(f'cp {input_path} {path_bagpipes+"/models/grids/bc03_miles_nebular_line_grids.fits"}')
 
-            input_path = os.path.join(local_pth, 'Grids/bc03_miles_nebular_cont_grids.fits')
+            input_path = os.path.join(local_pth, 'bc03_miles_nebular_cont_grids.fits')
             os.system(f'cp {input_path} {path_bagpipes+"/models/grids/bc03_miles_nebular_cont_grids.fits"}')
 
             print('Grids copied successfully. You can now continue.')
         else:
             print('Ok things will not work properly. Please copy the grids manually.')
-
-check_setup()
