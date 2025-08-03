@@ -28,12 +28,9 @@ import matplotlib
 import numpy as np
 import bagpipes as pipes
 
-wave = np.arange(0.05 * 1e4, 1* 5e4, 10.0)
-
 import sys
 sys.setrecursionlimit(1500)
 pth = sys.path[0]
-wave_grid = np.logspace(2,4,1000)
 
 class Viz_outreach:
     '''Class to visualize SED'''
@@ -70,9 +67,6 @@ class Viz_outreach:
         self.Z = 1,
         self.U = -3
         self.Av = 0.5
-
-        self.wave = np.arange(0.05 * 1e4, 1* 5e4, 10.0)
-
 
         self.pregenerate_model()
         
@@ -157,6 +151,11 @@ class Viz_outreach:
         self.GSz14 = Button(axbutton4, 'GSz14', color='lightblue', hovercolor='lightgreen')
         self.GSz14.on_clicked(self.GSz14_load)
 
+        # Buttons to load other GSz14
+        axbutton5 = plt.axes([0.5,0.9, 0.05,0.05])
+        self.COS30 = Button(axbutton5, 'COS30', color='lightblue', hovercolor='lightgreen')
+        self.COS30.on_clicked(self.COS30_load)
+
         self.generate_model()
         self.plot_general()
         plt.show()
@@ -194,6 +193,19 @@ class Viz_outreach:
             self.data_wave = hdu['WAVELENGTH'].data*1e6
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
+
+            self.plot_general()
+
+    def COS30_load(self, event):
+        with pyfits.open(pth+'/Data/007437_prism_clear_v3.1_1D.fits') as hdu:
+            self.data_wave = hdu['WAVELENGTH'].data*1e6
+            self.data_flux = hdu['DATA'].data*1e-7
+            self.data_error = hdu['ERR'].data*1e-7
+
+            self.data_wave = np.append(self.data_wave, np.linspace(5.32,5.5, 32))
+            self.data_flux = np.append(self.data_flux, np.zeros(32))
+            self.data_error = np.append(self.data_error, np.ones(32)*0.1)
+                                       
 
             self.plot_general()
 
@@ -260,7 +272,8 @@ class Viz_outreach:
         model_components["redshift"] = self.z  # Observed redshift
         model_components["exponential"] = exponential
         model_components["dust"] = dust
-        model_components["R_curve"] = np.c_[self.wave,700 * np.ones_like(self.wave)] 
+        with pyfits.open("/Users/jansen/JADES/LSFs/jwst_nirspec_prism_disp.fits") as hdul:
+            model_components["R_curve"] = np.c_[1e4*hdul[1].data["WAVELENGTH"], hdul[1].data["R"]]
 
 
         self.model.update(model_components)
@@ -280,7 +293,7 @@ class Viz_outreach:
             self.axres.set_xlabel("Wavelength [microns]")
             self.ax0.set_xlim(0.5, 5.3)
 
-            self.ax0.text(0.05, 0.9,'Your stars are older than the Universe, reduce Age parameter!',\
+            self.ax0.text(0.05, 0.75,'Your stars are older than the Universe, reduce Age parameter!',\
                         transform = self.ax0.transAxes)
 
             
@@ -298,7 +311,7 @@ class Viz_outreach:
 
             self.score = np.nansum((self.data_flux- self.model.spectrum[:, 1])**2/self.data_error**2)/(len(self.data_flux)-6)
 
-            self.ax0.text(0.05, 0.85,'(Smaller is better)\nscore: {:.2f}'.format(self.score),\
+            self.ax0.text(0.05, 0.75,'(Smaller is better)\nscore: {:.2f}'.format(self.score),\
                         transform = self.ax0.transAxes, bbox=dict(boxstyle='Round,pad=0.01', facecolor='white',
                             alpha=1.0, edgecolor='none'))
 
@@ -342,7 +355,7 @@ class Viz_outreach:
             if not self.ax0.get_xlim()[0]*1.001<wave<self.ax0.get_xlim()[1]*0.999: continue
         
             color = cmap(norm(float(i)))
-            where_line = np.argmin(np.abs(self.wave-wave))
+            where_line = np.argmin(np.abs(self.data_wave-wave))
             where_line = slice(where_line-5, where_line+6, 1)
             #data_at_line = (
             #    np.min(spec1d[where_line]) if pre_dash
