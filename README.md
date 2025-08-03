@@ -1,4 +1,4 @@
-# JADES-Spectral-Lab
+# JWST-Spectral-Lab
 
 JADES-Spectral-Lab is an outreach activity designed to show students and the general public how SED fitting works and what we can learn from a spectrum. The entire thing is a wrapper around Bagpipes to create a best fitting model to various JWST prism spectra using sliders controlling various paramters. 
 
