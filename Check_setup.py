@@ -1,4 +1,5 @@
 # This file checks that Bagpipes has properely setup grids and if not, it will copy over new grids.
+from ast import Raise
 import os
 import sys
 from threading import local
@@ -6,7 +7,7 @@ import astropy.io.fits as pyfits
 import numpy as np
 
 
-def check_setup():
+def check_setup_old():
     """
     Check if the Bagpipes setup is correct.
     If not, copy the grids from the default location to the user's directory.
@@ -55,3 +56,22 @@ def check_setup():
             print('Grids copied successfully. You can now continue.')
         else:
             print('Ok things will not work properly. Please copy the grids manually.')
+
+def check_setup():
+    """
+    Check if the Bagpipes setup is correct.
+    If not, copy the grids from the default location to the user's directory.
+    """
+    import bagpipes as pipes
+
+    path_bagpipes = os.path.dirname(pipes.__file__)
+
+    zmax = pipes.config.max_redshift
+    if zmax<15:
+        print(f'Bagpipes is configured with a maximum redshift of {zmax}. This is not recommended. I am copying over new config.py file with zmax=17.')
+        
+        local_pth = sys.path[0]+'/Grids/config.py'
+        input_pth = os.path.join(path_bagpipes, 'config.py')
+        os.system(f'cp {local_pth} {input_pth}')
+        
+        raise TypeError("Bagpipes is configured with a maximum redshift of 17. Please restart the code.")

@@ -19,4 +19,4 @@ python SED_fitter.py
 
 # Grid models updates
 
-If you are a scientist, I would highly recommend to create a separate Conda/other enviroment to install this. This is mostly due to the need to ensure that the nebular grids are updates for high logU and low metallicities. The code check if these are present in your grid nebular models and copies over the ones in the package. Although it saves them in bagpipes/models/grids/old/ it is still better to create a new enviroment so it doesnt ruin your custom nebular models. 
+If you are a scientist, I would highly recommend to create a separate Conda/other enviroment to install this. This is mostly due to the need to ensure that the maximum redshift to estimate IGM is setup above z>14 to ensure we can fit GS-z14. if the redshift_max is less than the value it will copy over new config file. Once it is done you will have to rerun the code. 

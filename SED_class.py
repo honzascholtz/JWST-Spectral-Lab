@@ -6,7 +6,7 @@ Created on Sun April 27 21:23:34 2025
 @author: jansen
 """
 
-#importing modules
+#importing modules            
 from astropy.io import fits as pyfits
 import Graph_setup as gst
 import numpy as np
@@ -24,6 +24,7 @@ from matplotlib.widgets import Slider, Button, RadioButtons, RangeSlider, TextBo
 
 
 import matplotlib.pyplot as plt
+import matplotlib
 import numpy as np
 import bagpipes as pipes
 
