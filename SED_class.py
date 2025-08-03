@@ -8,8 +8,6 @@ Created on Sun April 27 21:23:34 2025
 
 #importing modules
 from astropy.io import fits as pyfits
-from sympy import frac
-from zmq import Frame
 import Graph_setup as gst
 import numpy as np
 
@@ -22,9 +20,6 @@ c= 3.*10**8
 fsz = gst.graph_format_official()
 
 import matplotlib.pyplot as plt
-import matplotlib.patches
-import matplotlib.cm
-from brokenaxes import brokenaxes
 from matplotlib.widgets import Slider, Button, RadioButtons, RangeSlider, TextBox
 
 
