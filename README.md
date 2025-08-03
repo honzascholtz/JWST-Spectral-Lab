@@ -1,9 +1,30 @@
 
 # SED Fitter
 
-SED Fitter is an outreach activity designed to show students and the general public how SED fitting works and what can we learn from a spectrum. The entire thing is a wrapper around Bagpipes to create a best fitting model to various JWST prism spectra. 
+SED Fitter is an outreach activity designed to show students and the general public how SED fitting works and what we can learn from a spectrum. The entire thing is a wrapper around Bagpipes to create a best fitting model to various JWST prism spectra using sliders controlling various paramters. 
 
 ![alt text](https://github.com/honzascholtz/SED_Fitter/blob/main/Images/UI.png "Example of the UI")
+
+The score is actually just a reduced $chi2^{2}$. The aim of this game is to try to get as low score as possible - reduce the difference between your best fit model and the data. The top panel displays the data in black and the current model in a red line. I have also put labels for the various emission lines. 
+
+The bottom panel are the residuals between your current model and the data. This should help visualise where you can find the best place for an improvement. The red dashed lines show the zero level on the plot. 
+
+The model we are trying to fit is quite simple, using exponential star formation history and nebular emission lines. The parameters of the model are as follows: 
+
+1) Redshift of the source
+
+2) stellar mass of the source
+
+3) logU - Strength of the radiation field
+
+4) Metallicity - amount of elements heavier than Hydrogen and Helium in the galaxy
+
+5) 6)  Age, Tau - describe a pattern where the rate at which stars form in a galaxy decreases exponentially over time. This means that the star formation rate initially is high, but then declines, with the rate of decline becoming slower over time. The age sets when did the star-formation episide start and Tau is the rate at which the star formation is declining 
+
+
+7) Dust - amount of dust in the galaxy (for scientist: Calzetti 2000)
+
+
 
 
 # How to run 
