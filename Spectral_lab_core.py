@@ -32,7 +32,7 @@ import sys
 sys.setrecursionlimit(1500)
 pth = sys.path[0]
 
-class Viz_outreach:
+class JWST_Spectral_lab:
     '''Class to visualize SED'''
     def __init__(self, ):
         """
@@ -69,6 +69,7 @@ class Viz_outreach:
         self.Av = 0.5
 
         self.pregenerate_model()
+        self.target = 'generic'
         
 
         self.ax0.set_ylabel("Flux")
@@ -176,6 +177,8 @@ class Viz_outreach:
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
 
+            self.target = 'generic'
+
             self.plot_general()
         
     def QC_galaxy_load(self, event):
@@ -183,6 +186,8 @@ class Viz_outreach:
             self.data_wave = hdu['WAVELENGTH'].data*1e6
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
+
+            self.target = 'generic'
 
             self.plot_general()
 
@@ -192,6 +197,8 @@ class Viz_outreach:
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
 
+            self.target = 'generic'
+
             self.plot_general()
     
     def SF2_galaxy_load(self, event):
@@ -200,6 +207,8 @@ class Viz_outreach:
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
 
+            self.target = 'generic'
+
             self.plot_general()
 
     def GSz14_load(self, event):
@@ -207,6 +216,8 @@ class Viz_outreach:
             self.data_wave = hdu['WAVELENGTH'].data*1e6
             self.data_flux = hdu['DATA'].data*1e-7
             self.data_error = hdu['ERR'].data*1e-7
+
+            self.target = 'GSz14'
 
             self.plot_general()
 
@@ -222,6 +233,7 @@ class Viz_outreach:
                                        
 
             self.plot_general()
+            self.target = 'generic'
 
     def slide_update(self,val):
         self.z = self.z_slider.val
@@ -333,6 +345,8 @@ class Viz_outreach:
                             alpha=1.0, edgecolor='none'))
 
             self.labels_eml()
+        if self.target == 'GSz14':
+            self.ax0.set_ylim(-0.00025, 0.01)
         self.fig.canvas.draw()
   
 
