@@ -229,7 +229,7 @@ class JWST_Spectral_lab:
 
             self.data_wave = np.append(self.data_wave, np.linspace(5.32,5.5, 32))
             self.data_flux = np.append(self.data_flux, np.zeros(32))
-            self.data_error = np.append(self.data_error, np.ones(32)*0.1)
+            self.data_error = np.append(self.data_error, np.ones(32)*0.001e-18)
                                        
 
             self.plot_general()
