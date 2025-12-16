@@ -13,6 +13,7 @@ import dash_bootstrap_components as dbc
 import Labs.Phot_flask as phot
 import Labs.redshift_flask as redshift
 import Labs.stellar_flask as stellar
+import Labs.ifu_flask as ifu
 
 
 # Create Flask server
@@ -23,13 +24,13 @@ server = Flask(__name__)
 # ============================================================================
 @server.route('/')
 def index():
-    """Home page with links to all three labs"""
+    """Home page with links to all four labs"""
     return render_template('index.html')
 
 @server.route('/api/health')
 def health():
     """API health check endpoint"""
-    return {'status': 'healthy', 'message': 'Flask + 3 Dash apps running'}
+    return {'status': 'healthy', 'message': 'Flask + 4 Dash apps running'}
 
 
 # ============================================================================
@@ -38,6 +39,7 @@ def health():
 photometry_app = phot.JADES_photo_lab(server, url_base_pathname='/photometry/')
 redshift_app = redshift.Redshift_lab(server, url_base_pathname='/redshift/')
 stellar_app = stellar.Stellar_pop_lab(server, url_base_pathname='/stellar-pop/')
+ifu_app = ifu.ifu_lab(server, url_base_pathname='/ifu/')
 
 if __name__ == '__main__':
     server.run(debug=True)

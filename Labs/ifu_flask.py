@@ -18,10 +18,10 @@ e = np.e
 c = 3.*10**8
 
 
-class Viz_outreach:
+class ifu_lab:
     '''Class to visualize FITS data using Dash'''
     
-    def __init__(self, path_res, vlim2=[-100, 100], z=None):
+    def __init__(self, server, url_base_pathname):
         """
         Load the FITS file and data
         
@@ -38,11 +38,20 @@ class Viz_outreach:
         z : float, optional
             Redshift
         """
+        
+        """Initialize the Photometry Dash application with Flask server"""
+        self.app = dash.Dash(
+            __name__, 
+            server=server,
+            url_base_pathname=url_base_pathname,
+            external_stylesheets=[dbc.themes.BOOTSTRAP])
+        
+        path_res = '/Users/jansen/My Drive/Astro/COS30_IFS/Saves/R2700/COS30_R2700_Halpha_OIII_fits_maps.fits'
 
+        self.z = 6.85072093
+        self.vlim2 = [-150,150]
         self.indc = [1,0]
-        self.z = z
         self.map_hdu_name = ['OIII', 'Narrow_vel']
-        self.vlim2 = vlim2
         
         # Load FITS data
         with pyfits.open(path_res, memmap=False) as hdulist:
@@ -56,13 +65,11 @@ class Viz_outreach:
             names = [hdu.name for hdu in hdulist]
             
             if 'YEVAL_NAR' in names:
-                print('Found YEVAL_NAR')
                 self.yeval_nar = hdulist['yeval_nar'].data
             else:
                 self.yeval_nar = None
                 
             if 'YEVAL_BRO' in names:
-                print('Found YEVAL_BRO')
                 self.yeval_bro = hdulist['yeval_bro'].data
             else:
                 self.yeval_bro = None
@@ -83,8 +90,7 @@ class Viz_outreach:
         self.current_i = self.nx // 2
         self.current_j = self.ny // 2
         
-        print(f"Data dimensions: {self.nwave} wavelengths, {self.ny} x {self.nx} pixels")
-        print(f"Starting position: x={self.current_i}, y={self.current_j}")
+        self.showme()
 
     
     def create_map_figure(self, map_name, title):
@@ -235,10 +241,7 @@ class Viz_outreach:
         """
         self.xlims = xlims if xlims else [self.obs_wave[0], self.obs_wave[-1]]
         self.ylims = ylims
-        
-        # Initialize Dash app
-        app = dash.Dash(__name__, external_stylesheets=[dbc.themes.BOOTSTRAP])
-        
+                
         # Create initial figures
         map0_fig = self.create_map_figure(0, self.map_hdu_name[0])
         map1_fig = self.create_map_figure(1, self.map_hdu_name[1])
@@ -248,7 +251,7 @@ class Viz_outreach:
         )
         
         # Layout
-        app.layout = dbc.Container([
+        self.app.layout = dbc.Container([
             dbc.Row([
                 dbc.Col(html.H1("Interactive FITS Cube Visualization", 
                                className="text-center mb-4"), width=12)
@@ -314,7 +317,7 @@ class Viz_outreach:
         ], fluid=True)
         
         # Callback for map clicks and spectrum update
-        @app.callback(
+        @self.app.callback(
             [Output('spectrum', 'figure'),
              Output('current-position', 'children')],
             [Input('map0', 'clickData'),
@@ -354,29 +357,11 @@ class Viz_outreach:
             return fig, f'{i},{j}'
         
         # Callback for slice map update
-        @app.callback(
+        @self.app.callback(
             Output('slice-map', 'figure'),
             Input('wavelength-slider', 'value')
         )
         def update_slice(slice_idx):
             return self.create_slice_figure(slice_idx)
         
-        # Run the app
-        print(f"\n{'='*60}")
-        print("Dash app is running!")
-        print(f"Open your browser and go to: http://127.0.0.1:8050/")
-        print(f"{'='*60}\n")
         
-        app.run(debug=True, port=8050)
-        
-        return app
-
-
-# Example usage:
-if __name__ == '__main__':
-    Viz = Viz_outreach(
-        '/Users/jansen/My Drive/Astro/COS30_IFS/Saves/R2700/COS30_R2700_Halpha_OIII_fits_maps.fits',
-        vlim2=[-100, 200], 
-        z=6.85072093
-    )
-    Viz.showme(xlims=[3.8, 3.95])
