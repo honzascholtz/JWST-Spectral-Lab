@@ -37,7 +37,7 @@ def health():
 photometry_app = phot.JADES_photo_lab(server, url_base_pathname='/photometry/')
 redshift_app = redshift.Redshift_lab(server, url_base_pathname='/redshift/')
 stellar_app = stellar.Stellar_pop_lab(server, url_base_pathname='/stellar-pop/')
-ifu_app = ifu.ifu_lab(server, url_base_pathname='/ifu/')
+ifu_app = ifu.IFU_lab(server, url_base_pathname='/ifu/')
 
 if __name__ == '__main__':
     server.run(debug=True)

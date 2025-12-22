@@ -18,7 +18,7 @@ e = np.e
 c = 3.*10**8
 
 
-class ifu_lab:
+class IFU_lab:
     '''Class to visualize FITS data using Dash'''
     
     def __init__(self, server, url_base_pathname):
