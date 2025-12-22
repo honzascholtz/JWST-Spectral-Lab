@@ -34,7 +34,7 @@ def health():
 
 
 # ============================================================================
-# INITIALIZE ALL THREE APPS
+# INITIALIZE ALL FOUR APPS
 # ============================================================================
 photometry_app = phot.JADES_photo_lab(server, url_base_pathname='/photometry/')
 redshift_app = redshift.Redshift_lab(server, url_base_pathname='/redshift/')
