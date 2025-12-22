@@ -1,15 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-JWST Labs - Flask Integration with Multiple Dash Apps
-Three separate Dash apps integrated with Flask
+JADES Labs - Flask Integration with Multiple Dash Apps
+Four separate Dash apps integrated with Flask
 
 @author: jansen (converted to Flask)
 """
 
 from flask import Flask,  render_template
-import dash_bootstrap_components as dbc
-
 import Labs.Phot_flask as phot
 import Labs.redshift_flask as redshift
 import Labs.stellar_flask as stellar
