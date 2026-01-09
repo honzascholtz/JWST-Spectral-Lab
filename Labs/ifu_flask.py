@@ -279,6 +279,7 @@ class IFU_lab:
                         id='wavelength-slider',
                         min=0,
                         max=self.nwave - 1,
+                        step=1,
                         value=self.slice_val_ind,
                         marks={i: f'{self.obs_wave[i]:.3f}' 
                                for i in range(0, self.nwave, max(1, self.nwave//10))},
