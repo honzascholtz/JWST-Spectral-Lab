@@ -3,3 +3,4 @@ __pycache__/SED_class.cpython-311.pyc
 /__pycache__
 *.pyc
 static
+Data/IFU/COS30_R2700_Halpha_OIII_fits_maps.fits

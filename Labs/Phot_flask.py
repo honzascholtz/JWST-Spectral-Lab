@@ -28,12 +28,13 @@ import astropy.stats as stats
 # APP 1: PHOTOMETRY LAB
 # ============================================================================
 class JADES_photo_lab:
-    def __init__(self, server, url_base_pathname):
+    def __init__(self, server, requests_pathname_prefix, routes_pathname_prefix):
         """Initialize the Photometry Dash application with Flask server"""
         self.app = dash.Dash(
             __name__, 
             server=server,
-            url_base_pathname=url_base_pathname,
+            requests_pathname_prefix=requests_pathname_prefix,
+            routes_pathname_prefix=routes_pathname_prefix,
             external_stylesheets=[dbc.themes.BOOTSTRAP]
         )
         self.app.title = "JWST Photometry Lab"

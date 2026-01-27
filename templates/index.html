@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JWST Labs - Home</title>
+    <title>JADES Labs - Home</title>
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <style>
         body {
@@ -35,6 +35,12 @@
         }
         .card-header-stellar {
             background: #1b825e; /* Green for medium wavelengths */
+        }
+        .card-header-fitsview {
+            background: #7b2cbf; /* Purple for FITS visualization */
+        }
+        .card-header-ifs {
+            background: #ff6b35; /* Orange for kinematics */
         }
         .btn-launch {
             color: white;
@@ -71,6 +77,24 @@
             box-shadow: 0 5px 15px rgba(0, 204, 136, 0.5);
             color: white;
         }
+        .btn-fitsview {
+            background: #7b2cbf;
+        }
+        .btn-fitsview:hover {
+            background: #6a1bb4;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(123, 44, 191, 0.5);
+            color: white;
+        }
+        .btn-ifs {
+            background: #ff6b35;
+        }
+        .btn-ifs:hover {
+            background: #e65a2a;
+            transform: scale(1.05);
+            box-shadow: 0 5px 15px rgba(255, 107, 53, 0.5);
+            color: white;
+        }
         .main-title {
             color: #333;
             text-shadow: none;
@@ -104,6 +128,23 @@
         <p class="text-center subtitle fs-5 mb-5">Explore the universe through James Webb Space Telescope and the JADES data</p>
         
         <div class="row g-4">
+            <!-- FITS Viewer Card -->
+            <div class="col-md-4">
+                <div class="card">
+                    <div class="card-header card-header-fitsview">
+                        <h3 class="mb-0">JADES Fits Viewer</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Browse through the JADES NIRCam images</p>
+                        <ul class="list-unstyled mb-3">
+                            <li>✓ Interactive viewer of the JADES/NIRCam images</li>
+                            <li>✓ Showcasing the spectra from our survey</li>
+                        </ul>
+                        <a href="https://jades-survey.github.io/viewer/" target="_blank" class="btn btn-launch btn-fitsview w-100">Launch FITS Viewer</a>
+                    </div>
+                </div>
+            </div>
+
             <!-- Photometry Lab Card -->
             <div class="col-md-4">
                 <div class="card">
@@ -138,9 +179,12 @@
                     </div>
                 </div>
             </div>
-            
+        </div>
+
+        <!-- Second Row -->
+        <div class="row g-4 mt-2">
             <!-- Stellar Population Lab Card -->
-            <div class="col-md-4">
+            <div class="col-md-6">
                 <div class="card">
                     <div class="card-header card-header-stellar">
                         <h3 class="mb-0">Stellar Population Lab</h3>
@@ -153,6 +197,25 @@
                             <li>✓ Physical parameters</li>
                         </ul>
                         <a href="/stellar-pop/" target="_blank" class="btn btn-launch btn-stellar w-100">Launch Stellar Lab</a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- IFS Kinematics Card -->
+            <div class="col-md-6">
+                <div class="card">
+                    <div class="card-header card-header-ifs">
+                        <h3 class="mb-0">IFS Kinematics Lab</h3>
+                    </div>
+                    <div class="card-body">
+                        <p class="card-text">Study galaxy kinematics through integral field spectroscopy. Analyze velocity maps, velocity dispersion, and gas dynamics across galaxy structures.</p>
+                        <ul class="list-unstyled mb-3">
+                            <li>✓ 2D velocity field mapping</li>
+                            <li>✓ Rotation curve analysis</li>
+                            <li>✓ Dispersion measurements</li>
+                            <li>✓ Kinematic modeling and interpretation</li>
+                        </ul>
+                        <a href="/ifu/" target="_blank" class="btn btn-launch btn-ifs w-100">Launch Kinematics Lab</a>
                     </div>
                 </div>
             </div>
