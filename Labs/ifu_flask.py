@@ -20,8 +20,7 @@ c = 3.*10**8
 
 class IFU_lab:
     '''Class to visualize FITS data using Dash'''
-    
-    def __init__(self, server, url_base_pathname):
+    def __init__(self, server, requests_pathname_prefix, routes_pathname_prefix):
         """
         Load the FITS file and data
         
@@ -43,7 +42,8 @@ class IFU_lab:
         self.app = dash.Dash(
             __name__, 
             server=server,
-            url_base_pathname=url_base_pathname,
+            requests_pathname_prefix=requests_pathname_prefix,
+            routes_pathname_prefix=routes_pathname_prefix,
             external_stylesheets=[dbc.themes.BOOTSTRAP])
         
         path_res = '/Users/jansen/My Drive/Astro/COS30_IFS/Saves/R2700/COS30_R2700_Halpha_OIII_fits_maps.fits'
