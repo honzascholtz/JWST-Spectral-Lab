@@ -11,7 +11,8 @@ from plotly.subplots import make_subplots
 import dash
 from dash import dcc, html, Input, Output, State
 import dash_bootstrap_components as dbc
-
+import os
+import sys
 nan = float('nan')
 pi = np.pi
 e = np.e
@@ -46,7 +47,8 @@ class IFU_lab:
             routes_pathname_prefix=routes_pathname_prefix,
             external_stylesheets=[dbc.themes.BOOTSTRAP])
         
-        path_res = '/Users/jansen/My Drive/Astro/COS30_IFS/Saves/R2700/COS30_R2700_Halpha_OIII_fits_maps.fits'
+        pth = sys.path[0] if sys.path[0] else '.'
+        filepath = os.path.join(pth, 'Data/IFU/COS30_R2700_Halpha_OIII_fits_maps.fits')
 
         self.z = 6.85072093
         self.vlim2 = [-150,150]
@@ -54,7 +56,7 @@ class IFU_lab:
         self.map_hdu_name = ['OIII', 'Narrow_vel']
         
         # Load FITS data
-        with pyfits.open(path_res, memmap=False) as hdulist:
+        with pyfits.open(filepath, memmap=False) as hdulist:
             self.map = []
             for ind, hdu_name in zip(self.indc, self.map_hdu_name):
                 self.map.append(hdulist[hdu_name].data[ind, :, :])

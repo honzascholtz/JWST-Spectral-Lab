@@ -11,7 +11,7 @@ from flask import Flask, render_template
 import Labs.Phot_flask as phot
 import Labs.redshift_flask as redshift
 import Labs.stellar_flask as stellar
-import Labs.ifu_flask as ifu
+#import Labs.ifu_flask as ifu
 
 
 # Create Flask server
