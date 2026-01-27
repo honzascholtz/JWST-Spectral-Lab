@@ -277,16 +277,28 @@ class IFU_lab:
             dbc.Row([
                 dbc.Col([
                     html.Label("Wavelength Slice:", className="fw-bold"),
-                    dcc.Slider(
-                        id='wavelength-slider',
-                        min=0,
-                        max=self.nwave - 1,
-                        step=1,
-                        value=self.slice_val_ind,
-                        marks={i: f'{self.obs_wave[i]:.3f}' 
-                               for i in range(0, self.nwave, max(1, self.nwave//10))},
-                        tooltip={"placement": "bottom", "always_visible": True}
-                    )
+                    dbc.Row([
+                        dbc.Col([
+                            dbc.Button("−", id='decrease-slice', color="primary", 
+                                      className="me-2", size="sm")
+                        ], width="auto"),
+                        dbc.Col([
+                            dcc.Slider(
+                                id='wavelength-slider',
+                                min=0,
+                                max=self.nwave - 1,
+                                step=1,
+                                value=self.slice_val_ind,
+                                marks={i: f'{self.obs_wave[i]:.3f}' 
+                                       for i in range(0, self.nwave, max(1, self.nwave//10))},
+                                tooltip={"placement": "bottom", "always_visible": True}
+                            )
+                        ], width=True),
+                        dbc.Col([
+                            dbc.Button("+", id='increase-slice', color="primary", 
+                                      className="ms-2", size="sm")
+                        ], width="auto")
+                    ], align="center")
                 ], width=12, className="mb-3")
             ]),
             
@@ -318,6 +330,30 @@ class IFU_lab:
                     children=f'{self.current_i},{self.current_j}')
             
         ], fluid=True)
+        
+        # Callback for button clicks to update slider
+        @self.app.callback(
+            Output('wavelength-slider', 'value'),
+            [Input('decrease-slice', 'n_clicks'),
+             Input('increase-slice', 'n_clicks')],
+            [State('wavelength-slider', 'value')]
+        )
+        def update_slider_from_buttons(n_decrease, n_increase, current_value):
+            ctx = dash.callback_context
+            
+            if not ctx.triggered:
+                return current_value
+            
+            button_id = ctx.triggered[0]['prop_id'].split('.')[0]
+            
+            if button_id == 'decrease-slice' and n_decrease:
+                new_value = max(0, current_value - 1)
+            elif button_id == 'increase-slice' and n_increase:
+                new_value = min(self.nwave - 1, current_value + 1)
+            else:
+                new_value = current_value
+            
+            return new_value
         
         # Callback for map clicks and spectrum update
         @self.app.callback(
@@ -366,5 +402,3 @@ class IFU_lab:
         )
         def update_slice(slice_idx):
             return self.create_slice_figure(slice_idx)
-        
-        
