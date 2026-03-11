@@ -14,6 +14,9 @@ import Labs.stellar_flask as stellar
 import Labs.ifu_flask as ifu
 
 
+import multiprocessing
+multiprocessing.set_start_method('fork')
+
 # Create Flask server
 server = Flask(__name__)
 
@@ -37,33 +40,32 @@ def health():
 # Each lab's __init__ must accept app_name and pass it as the first argument
 # to dash.Dash(...) instead of __name__.
 # ============================================================================
-photometry_app = phot.JADES_photo_lab(
-    server,
-    requests_pathname_prefix='/photometry/',
-    routes_pathname_prefix='/photometry/',
-    app_name='jades_photo_lab'
-)
-
-redshift_app = redshift.Redshift_lab(
-    server,
-    requests_pathname_prefix='/redshift/',
-    routes_pathname_prefix='/redshift/',
-    app_name='redshift_lab'
-)
-
-stellar_app = stellar.Stellar_pop_lab(
-    server,
-    requests_pathname_prefix='/stellar-pop/',
-    routes_pathname_prefix='/stellar-pop/',
-    app_name='stellar_pop_lab'
-)
-
-ifu_app = ifu.IFU_lab(
-    server,
-    requests_pathname_prefix='/ifu/',
-    routes_pathname_prefix='/ifu/',
-    app_name='ifu_lab'
-)
-
 if __name__ == '__main__':
+    photometry_app = phot.JADES_photo_lab(
+        server,
+        requests_pathname_prefix='/photometry/',
+        routes_pathname_prefix='/photometry/',
+        app_name='jades_photo_lab'
+    )
+
+    redshift_app = redshift.Redshift_lab(
+        server,
+        requests_pathname_prefix='/redshift/',
+        routes_pathname_prefix='/redshift/',
+        app_name='redshift_lab'
+    )
+
+    stellar_app = stellar.Stellar_pop_lab(
+        server,
+        requests_pathname_prefix='/stellar-pop/',
+        routes_pathname_prefix='/stellar-pop/',
+        app_name='stellar_pop_lab'
+    )
+
+    ifu_app = ifu.IFU_lab(
+        server,
+        requests_pathname_prefix='/ifu/',
+        routes_pathname_prefix='/ifu/',
+        app_name='ifu_lab'
+    )
     server.run(debug=True)
