@@ -34,9 +34,9 @@ c = 3.*10**8
 class Stellar_pop_lab:
     def __init__(self, server, requests_pathname_prefix, routes_pathname_prefix):
         self.app = dash.Dash(__name__, server=server, requests_pathname_prefix=requests_pathname_prefix, routes_pathname_prefix=routes_pathname_prefix,
-
                             external_stylesheets=[dbc.themes.BOOTSTRAP])
         self.app.title = "JADES Stellar Population Lab"
+        self.initial_dataset = 'SF943'  #
         
         self.data_wave = None
         self.data_flux = None
@@ -92,22 +92,13 @@ class Stellar_pop_lab:
     def create_mock_model_spectrum(self):
         if self.data_wave is None:
             return
-        age_factor = max(0.1, self.age / 2.0)
-        mass_factor = 10 ** (self.Mass - 9.0)
-        metal_factor = self.Z
-        dust_factor = np.exp(-self.Av / 3.0)
-        continuum = age_factor * mass_factor * metal_factor * dust_factor * 0.005 * (self.data_wave / 2.0) ** (-1.5)
-        emission = np.zeros_like(self.data_wave)
-        if self.U > -4:
-            ionization_factor = 10 ** (self.U + 3)
-            emission = ionization_factor * (np.exp(-((self.data_wave - 1.2) / 0.05) ** 2) * 0.01 +
-                                           np.exp(-((self.data_wave - 2.1) / 0.03) ** 2) * 0.005 +
-                                           np.exp(-((self.data_wave - 3.7) / 0.04) ** 2) * 0.008)
-        model_flux = continuum + emission
-        self.model_spectrum = np.column_stack([self.data_wave * 1e4, model_flux])
+
+        
+        model_flux = np.zeros_like(self.data_wave)
+        self.model_spectrum = np.column_stack([self.data_wave, model_flux])
     
     def pregenerate_model(self):
-        global BAGPIPES_AVAILABLE
+        
         if BAGPIPES_AVAILABLE:
             try:
                 delayed = {"age": self.age, "tau": self.tau, "massformed": self.Mass, "metallicity": self.Z}
@@ -127,14 +118,12 @@ class Stellar_pop_lab:
                     spec_wavs=self.data_wave * 1e4 if self.data_wave is not None else np.linspace(5000, 53000, 1000))
             except Exception as e:
                 print(f"Error creating bagpipes model: {e}")
-                BAGPIPES_AVAILABLE = False
                 self.create_mock_model_spectrum()
         else:
-            self.create_mock_model_spectrum()
+            raise RuntimeError("Bagpipes is not available. Cannot pregenerate model.")
     
     def generate_model(self):
-        global BAGPIPES_AVAILABLE
-        if BAGPIPES_AVAILABLE and self.model is not None:
+        if self.model is not None:
             try:
                 delayed = {"age": self.age, "tau": self.tau, "massformed": self.Mass, "metallicity": self.Z}
                 dust = {"type": "Calzetti", "Av": self.Av}
@@ -157,6 +146,23 @@ class Stellar_pop_lab:
         else:
             self.create_mock_model_spectrum()
     
+    def _model_wavs_match(self):
+        """
+        Check whether self.model was built on the same wavelength grid as
+        self.data_wave.  If they diverge (e.g. because this worker never saw
+        the dataset-switch request) we must call pregenerate_model() before
+        generate_model() to avoid silent stale-model updates.
+        """
+        if self.model is None or self.data_wave is None:
+            return False
+        try:
+            # bagpipes stores wavelengths in Å; data_wave is in μm
+            model_wavs = self.model.spectrum[:, 0] / 1e4
+            return (len(model_wavs) == len(self.data_wave) and
+                    np.allclose(model_wavs, self.data_wave, rtol=1e-3))
+        except Exception:
+            return False
+
     def calculate_score(self):
         if self.model_spectrum is not None and self.data_flux is not None:
             try:
@@ -192,33 +198,27 @@ class Stellar_pop_lab:
     def get_instantaneous_sfr(self):
         """Get the current star formation rate of the galaxy"""
         age_universe, sfr = self.calculate_sfh()
-        # Get the most recent SFR (at the observation time)
         return sfr[0]
             
-    
     def get_main_sequence(self, z):
         """
-        Calculate the star-forming main sequence based on redshift
-        Using Speagle et al. (2014) relation
+        Calculate the star-forming main sequence based on redshift.
+        Using Speagle et al. (2014) relation.
         """
-        # Calculate cosmic time at given redshift
         t = cosmo.age(z).value  # in Gyr
-        
-        # Mass range for plotting
         log_mass = np.linspace(7, 12, 100)
-        
-        # Speagle et al. (2014) main sequence relation
         # log(SFR) = (0.84 - 0.026*t) * log(M*) - (6.51 - 0.11*t)
         log_sfr_ms = (0.84 - 0.026*t) * (log_mass - 9) + (0.84 - 0.026*t) * 9 - (6.51 - 0.11*t)
-        
-        # Scatter in main sequence (±0.3 dex)
         log_sfr_upper = log_sfr_ms + 0.3
         log_sfr_lower = log_sfr_ms - 0.3
-        
         return log_mass, log_sfr_ms, log_sfr_upper, log_sfr_lower
     
     def setup_layout(self):
         self.app.layout = dbc.Container([
+            # --- FIX 1: dcc.Store holds the active dataset key in the browser,
+            #     making it available to every server worker via State. ---
+            dcc.Store(id="active-dataset", data=self.initial_dataset),
+
             dbc.Row([dbc.Col([html.H1("JADES Stellar Population Lab", className="text-center mb-4")], width=12)]),
             dbc.Row([
                 dbc.Col([
@@ -302,7 +302,6 @@ class Stellar_pop_lab:
                 ], width=6)
             ], className="mt-3"),
             
-            # New row for SFR vs Mass plot
             dbc.Row([
                 dbc.Col([
                     html.Hr(className="my-4"),
@@ -313,27 +312,63 @@ class Stellar_pop_lab:
     
     def setup_callbacks(self):
         @self.app.callback(
-            [Output("main-plot", "figure"), Output("sfh-plot", "figure"), Output("sfr-mass-plot", "figure")],
-            [Input("mass-slider", "value"), Input("logU-slider", "value"), Input("metal-slider", "value"),
-             Input("age-slider", "value"), Input("tau-slider", "value"), Input("dust-slider", "value")] +
+            [Output("main-plot", "figure"),
+             Output("sfh-plot", "figure"),
+             Output("sfr-mass-plot", "figure"),
+             Output("active-dataset", "data")],       # FIX 1: persist key back to Store
+            [Input("mass-slider", "value"),
+             Input("logU-slider", "value"),
+             Input("metal-slider", "value"),
+             Input("age-slider", "value"),
+             Input("tau-slider", "value"),
+             Input("dust-slider", "value")] +
             [Input(f"btn-{key}", "n_clicks") for key in self.data_files.keys()],
+            [State("active-dataset", "data")],         # FIX 1: read current key from Store
             prevent_initial_call=False
         )
         def update_app(*args):
             ctx = callback_context
-            self.Mass, self.U, self.Z = args[0], args[1], args[2]
-            self.age, self.tau, self.Av = 10 ** args[3], 10 ** args[4], args[5]
-            
+            n_datasets = len(self.data_files)
+
+            # Unpack positional args: 6 sliders | N buttons | 1 Store State
+            slider_args        = args[:6]
+            btn_args           = args[6:6 + n_datasets]
+            current_dataset_key = args[6 + n_datasets]  # from State
+
+            self.Mass = slider_args[0]
+            self.U    = slider_args[1]
+            self.Z    = slider_args[2]
+            self.age  = 10 ** slider_args[3]
+            self.tau  = 10 ** slider_args[4]
+            self.Av   = slider_args[5]
+
+            # Determine the active dataset key (button press wins)
+            new_dataset_key = current_dataset_key or 'SF943'
             if ctx.triggered:
                 trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
                 for i, key in enumerate(self.data_files.keys()):
-                    if trigger_id == f"btn-{key}" and args[6 + i]:
-                        self.load_data(key)
-                        self.pregenerate_model()
+                    if trigger_id == f"btn-{key}" and btn_args[i]:
+                        new_dataset_key = key
                         break
-            
+
+            # --- FIX 1 + FIX 2 combined ---
+            # Reload data and rebuild the bagpipes model object when:
+            #   (a) the dataset key has changed (FIX 1 – explicit switch), OR
+            #   (b) this worker's model wavelength grid doesn't match data_wave
+            #       (FIX 2 – multi-worker stale state guard)
+            dataset_changed = (new_dataset_key != current_dataset_key)
+            if dataset_changed or not self._model_wavs_match():
+                self.load_data(new_dataset_key)
+                self.pregenerate_model()
+
             self.generate_model()
-            return self.create_main_plot(), self.create_sfh_plot(), self.create_sfr_mass_plot()
+
+            return (
+                self.create_main_plot(),
+                self.create_sfh_plot(),
+                self.create_sfr_mass_plot(),
+                new_dataset_key,            # write updated key back into Store
+            )
     
     def create_main_plot(self):
         if self.data_wave is None:
@@ -408,86 +443,59 @@ class Stellar_pop_lab:
         fig = go.Figure()
         
         try:
-            # Get main sequence relation
             log_mass, log_sfr_ms, log_sfr_upper, log_sfr_lower = self.get_main_sequence(self.z)
             
-            # Plot main sequence as a shaded region
             fig.add_trace(go.Scatter(
                 x=log_mass, y=10**log_sfr_upper,
-                mode='lines',
-                line=dict(width=0),
-                showlegend=False,
-                hoverinfo='skip'
+                mode='lines', line=dict(width=0),
+                showlegend=False, hoverinfo='skip'
             ))
             
             fig.add_trace(go.Scatter(
                 x=log_mass, y=10**log_sfr_lower,
-                mode='lines',
-                line=dict(width=0),
-                fill='tonexty',
-                fillcolor='rgba(200, 200, 200, 0.3)',
-                name='Main Sequence ±0.3 dex',
-                showlegend=True
+                mode='lines', line=dict(width=0),
+                fill='tonexty', fillcolor='rgba(200, 200, 200, 0.3)',
+                name='Main Sequence ±0.3 dex', showlegend=True
             ))
             
-            # Plot main sequence line
             fig.add_trace(go.Scatter(
                 x=log_mass, y=10**log_sfr_ms,
-                mode='lines',
-                line=dict(color='gray', width=2, dash='dash'),
-                name=f'Main Sequence (z={self.z:.2f})',
-                showlegend=True
+                mode='lines', line=dict(color='gray', width=2, dash='dash'),
+                name=f'Main Sequence (z={self.z:.2f})', showlegend=True
             ))
             
-            # Calculate and plot current galaxy position
             current_sfr = self.get_instantaneous_sfr()
             log_sfr = np.log10(current_sfr) if current_sfr > 0 else -5
-            # Determine if galaxy is on, above, or below main sequence
-            log_mass_current = self.Mass
-            log_sfr_ms_current = (0.84 - 0.026*cosmo.age(self.z).value) * (log_mass_current - 9) + \
-                                 (0.84 - 0.026*cosmo.age(self.z).value) * 9 - \
-                                 (6.51 - 0.11*cosmo.age(self.z).value)
-            
+
+            t = cosmo.age(self.z).value
+            log_sfr_ms_current = ((0.84 - 0.026*t) * (self.Mass - 9) +
+                                  (0.84 - 0.026*t) * 9 -
+                                  (6.51 - 0.11*t))
             offset = log_sfr - log_sfr_ms_current
             
             if offset > 0.3:
-                galaxy_type = "Starburst"
-                marker_color = "red"
+                galaxy_type, marker_color = "Starburst", "blue"
             elif offset < -0.3:
-                galaxy_type = "Quiescent"
-                marker_color = "blue"
+                galaxy_type, marker_color = "Quiescent", "red"
             else:
-                galaxy_type = "Main Sequence"
-                marker_color = "green"
+                galaxy_type, marker_color = "Main Sequence", "green"
             
-            # Plot the current galaxy
             fig.add_trace(go.Scatter(
-                x=[self.Mass],
-                y=[current_sfr],
+                x=[self.Mass], y=[current_sfr],
                 mode='markers',
-                marker=dict(
-                    size=15,
-                    color=marker_color,
-                    symbol='star',
-                    line=dict(color='black', width=2)
-                ),
-                name=f'Your Galaxy ({galaxy_type})',
-                showlegend=True,
+                marker=dict(size=15, color=marker_color, symbol='star',
+                            line=dict(color='black', width=2)),
+                name=f'Your Galaxy ({galaxy_type})', showlegend=True,
                 text=f'Mass: {self.Mass:.2f}<br>SFR: {current_sfr:.2f} M☉/yr<br>Offset: {offset:.2f} dex',
                 hoverinfo='text'
             ))
             
-            # Update layout
             fig.update_layout(
                 title=f"Star Formation Rate vs Stellar Mass (z={self.z:.2f})",
-                xaxis_title="log(M* / M☉)",
-                yaxis_title="SFR [M☉/yr]",
+                xaxis_title="log(M* / M☉)", yaxis_title="SFR [M☉/yr]",
                 xaxis=dict(range=[7, 12]),
-                yaxis_type="log",
-                yaxis=dict(range=[-2, 3]),
-                template="plotly_white",
-                height=500,
-                title_font_size=16,
+                yaxis_type="log", yaxis=dict(range=[-2, 3]),
+                template="plotly_white", height=500, title_font_size=16,
                 legend=dict(x=0.02, y=0.98, bgcolor='rgba(255,255,255,0.8)'),
                 hovermode='closest'
             )
@@ -496,10 +504,8 @@ class Stellar_pop_lab:
             print(f"Error creating SFR-Mass plot: {e}")
             fig.add_annotation(
                 text=f"Error creating plot: {str(e)}",
-                x=0.5, y=0.5,
-                xref="paper", yref="paper",
-                showarrow=False,
-                font=dict(size=14, color="red")
+                x=0.5, y=0.5, xref="paper", yref="paper",
+                showarrow=False, font=dict(size=14, color="red")
             )
         
         return fig

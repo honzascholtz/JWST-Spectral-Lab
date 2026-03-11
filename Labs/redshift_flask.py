@@ -38,7 +38,9 @@ class Redshift_lab:
             'SF2': {'file': '001927_prism_clear_v5.0_1D.fits', 'ztrue': 3.6591, 'target': 'generic'},
             'PSB': {'file': '023286_prism_clear_v5.1_1D.fits', 'ztrue': 1.781, 'target': 'generic'},
             'zhig': {'file': '066585_prism_clear_v5.1_1D.fits', 'ztrue': 7.1404, 'target': 'low_snr'},
-            'zhig2': {'file': '003991_prism_clear_v5.1_1D.fits', 'ztrue': 10.603, 'target': 'gnz11'}
+            'zhig2': {'file': '003991_prism_clear_v5.1_1D.fits', 'ztrue': 10.603, 'target': 'gnz11'},
+            'zhig3': {'file': ' 001936_prism_clear_v5.1_1D.fits', 'ztrue': 7.08989, 'target': 'gnz11'},
+           
         }
         
         self.load_data('SF943')

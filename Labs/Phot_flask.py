@@ -55,12 +55,12 @@ class JADES_photo_lab:
         self.data_files = {
             'Galaxy1': {'file': 'hlsp_jades_jwst_nirspec_goods-s-mediumjwst-00188208_clear-prism_v1.0_x1d.fits', 'z': 9.436, 'target': 'generic'},
             'Galaxy2': {'file': 'hlsp_jades_jwst_nirspec_goods-s-mediumjwst-00003204_clear-prism_v1.0_x1d.fits', 'z': 2.820, 'target': 'generic'},
-            'SF_galaxy': {'file': '001882_prism_clear_v5.0_1D.fits', 'z': 5.4431, 'target': 'generic'},
-            'GSz14': {'file': '183348_prism_clear_v5.0_1D.fits', 'z': 14.18, 'target': 'GSz14'},
-            'COS30': {'file': '007437_prism_clear_v3.1_1D.fits', 'z': 6.856, 'target': 'generic'},
-            'SF2': {'file': '001927_prism_clear_v5.0_1D.fits', 'z': 3.6591, 'target': 'generic'},
-            'PSB': {'file': '023286_prism_clear_v5.1_1D.fits', 'z': 1.781, 'target': 'generic'},
-            'zhig': {'file': '066585_prism_clear_v5.1_1D.fits', 'z': 7.1404, 'target': 'low_snr'},
+            'GN-z11': {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumhst-00003991_clear-prism_v1.0_x1d.fits', 'z': 10.601, 'target': 'generic'},
+            'GSz14': {'file': 'hlsp_jades_jwst_nirspec_goods-s-deepjwst-00183348_clear-prism_v1.0_x1d.fits', 'z': 14.18, 'target': 'GSz14'},
+            'Nrb': {'file': 'hlsp_jades_jwst_nirspec_goods-s-mediumjwst-00200212_clear-prism_v1.0_x1d.fits', 'z': 6.856, 'target': 'generic'},
+            'QC': {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumhst-00023924_clear-prism_v1.0_x1d.fits', 'z': 3.6591, 'target': 'generic'},
+            'PSB': {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumhst-00024824_clear-prism_v1.0_x1d.fits', 'z': 1.781, 'target': 'generic'},
+            'Galaxy3': {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumjwst-10004051_clear-prism_v1.0_x1d.fits', 'z': 7.1404, 'target': 'low_snr'},
         }
         
         self.load_data('Galaxy1')

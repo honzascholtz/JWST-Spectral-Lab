@@ -52,6 +52,7 @@ stellar_app = stellar.Stellar_pop_lab(
     routes_pathname_prefix='/stellar-pop/'
 )
 
+
 ifu_app = ifu.IFU_lab(
     server, 
     requests_pathname_prefix='/ifu/',
