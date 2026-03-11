@@ -16,10 +16,17 @@ import astropy.io.fits as pyfits
 # APP 2: REDSHIFT LAB
 # ============================================================================
 class Redshift_lab:
-    def __init__(self, server, requests_pathname_prefix, routes_pathname_prefix):
-        self.app = dash.Dash(__name__, server=server, requests_pathname_prefix=requests_pathname_prefix,
-                            external_stylesheets=[dbc.themes.BOOTSTRAP], routes_pathname_prefix=routes_pathname_prefix,
-)
+    def __init__(self, server, requests_pathname_prefix, routes_pathname_prefix, app_name=None):
+        
+        """Initialize the Redshift Dash application with Flask server"""
+        self.app = dash.Dash(
+            app_name or __name__,          # use unique name if provided
+            server=server,
+            requests_pathname_prefix=requests_pathname_prefix,
+            routes_pathname_prefix=routes_pathname_prefix,
+            external_stylesheets=[dbc.themes.BOOTSTRAP],
+            suppress_callback_exceptions=True
+        )
         self.app.title = "JWST Redshift Lab"
         
         self.data_wave = None
