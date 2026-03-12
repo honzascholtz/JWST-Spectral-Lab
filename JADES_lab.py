@@ -14,6 +14,9 @@ import Labs.stellar_flask as stellar
 import Labs.ifu_flask as ifu
 import os
 
+import multiprocessing
+multiprocessing.set_start_method('fork')
+
 # Create Flask server
 server = Flask(__name__)
 
@@ -39,6 +42,9 @@ def health():
 
 # ============================================================================
 # INITIALIZE ALL FOUR APPS
+# Each app gets a unique app_name so Dash doesn't collide on asset routes.
+# Each lab's __init__ must accept app_name and pass it as the first argument
+# to dash.Dash(...) instead of __name__.
 # ============================================================================
 photometry_app = phot.JADES_photo_lab(
     server, 

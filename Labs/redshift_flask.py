@@ -16,10 +16,17 @@ import astropy.io.fits as pyfits
 # APP 2: REDSHIFT LAB
 # ============================================================================
 class Redshift_lab:
-    def __init__(self, server, requests_pathname_prefix, routes_pathname_prefix):
-        self.app = dash.Dash(__name__, server=server, requests_pathname_prefix=requests_pathname_prefix,
-                            external_stylesheets=[dbc.themes.BOOTSTRAP], routes_pathname_prefix=routes_pathname_prefix,
-)
+    def __init__(self, server, requests_pathname_prefix, routes_pathname_prefix, app_name=None):
+        
+        """Initialize the Redshift Dash application with Flask server"""
+        self.app = dash.Dash(
+            app_name or __name__,          # use unique name if provided
+            server=server,
+            requests_pathname_prefix=requests_pathname_prefix,
+            routes_pathname_prefix=routes_pathname_prefix,
+            external_stylesheets=[dbc.themes.BOOTSTRAP],
+            suppress_callback_exceptions=True
+        )
         self.app.title = "JWST Redshift Lab"
         
         self.data_wave = None
@@ -38,7 +45,9 @@ class Redshift_lab:
             'SF2': {'file': '001927_prism_clear_v5.0_1D.fits', 'ztrue': 3.6591, 'target': 'generic'},
             'PSB': {'file': '023286_prism_clear_v5.1_1D.fits', 'ztrue': 1.781, 'target': 'generic'},
             'zhig': {'file': '066585_prism_clear_v5.1_1D.fits', 'ztrue': 7.1404, 'target': 'low_snr'},
-            'zhig2': {'file': '003991_prism_clear_v5.1_1D.fits', 'ztrue': 10.603, 'target': 'gnz11'}
+            'zhig2': {'file': '003991_prism_clear_v5.1_1D.fits', 'ztrue': 10.603, 'target': 'gnz11'},
+            'zhig3': {'file': ' 001936_prism_clear_v5.1_1D.fits', 'ztrue': 7.08989, 'target': 'gnz11'},
+           
         }
         
         self.load_data('SF943')

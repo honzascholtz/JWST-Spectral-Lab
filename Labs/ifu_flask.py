@@ -21,31 +21,17 @@ c = 3.*10**8
 
 class IFU_lab:
     '''Class to visualize FITS data using Dash'''
-    def __init__(self, server, requests_pathname_prefix, routes_pathname_prefix):
-        """
-        Load the FITS file and data
+    def __init__(self, server, requests_pathname_prefix, routes_pathname_prefix, app_name=None):
         
-        Parameters
-        ----------
-        path_res : str
-            Path to FITS file
-        map_hdu : list
-            List of HDU names/indices for maps
-        indc : list
-            Indices for map slices
-        vlim2 : list
-            Color scale limits for velocity map
-        z : float, optional
-            Redshift
-        """
-        
-        """Initialize the Photometry Dash application with Flask server"""
+        """Initialize the IFU Dash application with Flask server"""
         self.app = dash.Dash(
-            __name__, 
+            app_name or __name__,          # use unique name if provided
             server=server,
             requests_pathname_prefix=requests_pathname_prefix,
             routes_pathname_prefix=routes_pathname_prefix,
-            external_stylesheets=[dbc.themes.BOOTSTRAP])
+            external_stylesheets=[dbc.themes.BOOTSTRAP],
+            suppress_callback_exceptions=True
+        )
         
         pth = sys.path[0] if sys.path[0] else '.'
         filepath = os.path.join(pth, 'Data/IFU/COS30_R2700_Halpha_OIII_fits_maps.fits')
