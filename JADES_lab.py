@@ -14,8 +14,8 @@ import Labs.stellar_flask as stellar
 import Labs.ifu_flask as ifu
 import os
 
-import multiprocessing
-multiprocessing.set_start_method('fork')
+#import multiprocessing
+#multiprocessing.set_start_method('fork')
 
 # Create Flask server
 server = Flask(__name__)
