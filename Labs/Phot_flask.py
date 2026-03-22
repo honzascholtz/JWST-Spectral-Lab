@@ -1,13 +1,13 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
-JWST Labs - Flask Integration with Multiple Dash Apps
-Three separate Dash apps integrated with Flask
+JWST Labs - Photometry Lab (multi-user safe)
 
-@author: jansen (converted to Flask)
+Fix: all dataset data is pre-loaded into a read-only cache at startup.
+Callbacks are pure functions that never write to self, so concurrent
+users cannot overwrite each other's state.
 """
 
-from flask import Flask, render_template_string
 import sys
 import os
 import numpy as np
@@ -19,232 +19,222 @@ import dash_bootstrap_components as dbc
 
 from astropy.modeling.models import Sersic2D
 from astropy.convolution import Gaussian2DKernel, convolve_fft
-from astropy.cosmology import Planck18 as cosmo
 import astropy.io.fits as pyfits
 import astropy.stats as stats
 
 
-# ============================================================================
-# APP 1: PHOTOMETRY LAB
-# ============================================================================
 class JADES_photo_lab:
     def __init__(self, server, requests_pathname_prefix, routes_pathname_prefix, app_name=None):
-        
-        """Initialize the Photometry Dash application with Flask server"""
         self.app = dash.Dash(
-            app_name or __name__,          # use unique name if provided
+            app_name or __name__,
             server=server,
             requests_pathname_prefix=requests_pathname_prefix,
             routes_pathname_prefix=routes_pathname_prefix,
             external_stylesheets=[dbc.themes.BOOTSTRAP],
-            suppress_callback_exceptions=True
+            suppress_callback_exceptions=True,
         )
         self.app.title = "JWST Photometry Lab"
-        
-        # Initialize data variables
-        self.amplitude = 1
-        self.radius = 10
-        self.index = 4
-        self.x = 0
-        self.y = 0
-        self.ellipticity = 0.5
-        self.theta = -1
-        self.target = 'generic'
-        self.score = 0
+
         self.image_lim = 20
-        
-        # Data file configurations
+        self.initial_dataset = 'Galaxy1'
+
         self.data_files = {
-            'Galaxy1': {'file': 'hlsp_jades_jwst_nirspec_goods-s-mediumjwst-00188208_clear-prism_v1.0_x1d.fits', 'z': 9.436, 'target': 'generic'},
-            'Galaxy2': {'file': 'hlsp_jades_jwst_nirspec_goods-s-mediumjwst-00003204_clear-prism_v1.0_x1d.fits', 'z': 2.820, 'target': 'generic'},
-            'GN-z11': {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumhst-00003991_clear-prism_v1.0_x1d.fits', 'z': 10.601, 'target': 'generic'},
-            'GSz14': {'file': 'hlsp_jades_jwst_nirspec_goods-s-deepjwst-00183348_clear-prism_v1.0_x1d.fits', 'z': 14.18, 'target': 'GSz14'},
-            'Nrb': {'file': 'hlsp_jades_jwst_nirspec_goods-s-mediumjwst-00200212_clear-prism_v1.0_x1d.fits', 'z': 6.856, 'target': 'generic'},
-            'QC': {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumhst-00023924_clear-prism_v1.0_x1d.fits', 'z': 3.6591, 'target': 'generic'},
-            'PSB': {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumhst-00024824_clear-prism_v1.0_x1d.fits', 'z': 1.781, 'target': 'generic'},
-            'Galaxy3': {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumjwst-10004051_clear-prism_v1.0_x1d.fits', 'z': 7.1404, 'target': 'low_snr'},
+            'Galaxy1': {'file': 'hlsp_jades_jwst_nirspec_goods-s-mediumjwst-00188208_clear-prism_v1.0_x1d.fits', 'target': 'generic'},
+            'Galaxy2': {'file': 'hlsp_jades_jwst_nirspec_goods-s-mediumjwst-00003204_clear-prism_v1.0_x1d.fits', 'target': 'generic'},
+            'GN-z11':  {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumhst-00003991_clear-prism_v1.0_x1d.fits', 'target': 'generic'},
+            'GSz14':   {'file': 'hlsp_jades_jwst_nirspec_goods-s-deepjwst-00183348_clear-prism_v1.0_x1d.fits',  'target': 'GSz14'},
+            'Nrb':     {'file': 'hlsp_jades_jwst_nirspec_goods-s-mediumjwst-00200212_clear-prism_v1.0_x1d.fits', 'target': 'generic'},
+            'QC':      {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumhst-00023924_clear-prism_v1.0_x1d.fits',  'target': 'generic'},
+            'PSB':     {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumhst-00024824_clear-prism_v1.0_x1d.fits',  'target': 'generic'},
+            'Galaxy3': {'file': 'hlsp_jades_jwst_nirspec_goods-n-mediumjwst-10004051_clear-prism_v1.0_x1d.fits', 'target': 'low_snr'},
         }
-        
-        self.load_data('Galaxy1')
-        self.generate_model()
+
+        # Pre-load ALL datasets once at startup into a read-only cache.
+        # FITS files never change, so this is safe to share across all users/workers.
+        self._cache = {}
+        for key in self.data_files:
+            try:
+                self._cache[key] = self._load_dataset(key)
+                print(f"Phot_flask: loaded dataset '{key}'")
+            except Exception as e:
+                print(f"Phot_flask: failed to load dataset '{key}': {e}")
+
         self.setup_layout()
         self.setup_callbacks()
-    
-    def load_data(self, dataset_key):
-        config = self.data_files[dataset_key]
-        self.z = config['z']
-        self.target = config['target']
-        
+
+    # ------------------------------------------------------------------
+    # Data loading (called once per dataset at startup, result is cached)
+    # ------------------------------------------------------------------
+    def _load_dataset(self, key):
+        """Load a FITS file and return an immutable dict. Never call from a callback."""
+        config = self.data_files[key]
         pth = sys.path[0] if sys.path[0] else '.'
         filepath = os.path.join(pth, 'Data/phot', config['file'])
+        lim = self.image_lim
         with pyfits.open(filepath) as hdu:
-            self.image = hdu['F444W'].data
-            self.image = self.image[84-self.image_lim:84+self.image_lim+1, 84-self.image_lim:84+self.image_lim+1]
-            self.image_header = hdu['F444W'].header
-            self.image_error = stats.sigma_clipped_stats(self.image, sigma=3.0, maxiters=10)[2] * np.ones_like(self.image)
-            self.shape = self.image.shape
-            self.psf_pixel = 0.145/(self.image_header['CDELT1']*3600) / 2.355
-            self.PSF_kernel = Gaussian2DKernel(self.psf_pixel)
-    
-    def generate_model(self):
-        x, y = np.meshgrid(np.arange(self.shape[1]), np.arange(self.shape[0]))
-        self.model = Sersic2D(
-            amplitude=self.amplitude, r_eff=self.radius, n=self.index,
-            x_0=self.x+self.image_lim, y_0=self.y+self.image_lim, 
-            ellip=self.ellipticity, theta=np.deg2rad(self.theta)
+            image = hdu['F444W'].data
+            image = image[84 - lim: 84 + lim + 1, 84 - lim: 84 + lim + 1]
+            header = hdu['F444W'].header
+        image_error = stats.sigma_clipped_stats(image, sigma=3.0, maxiters=10)[2] * np.ones_like(image)
+        psf_pixel = 0.145 / (header['CDELT1'] * 3600) / 2.355
+        psf_kernel = Gaussian2DKernel(psf_pixel)
+        return {
+            'image':       image,
+            'image_error': image_error,
+            'shape':       image.shape,
+            'PSF_kernel':  psf_kernel,
+            'target':      config['target'],
+        }
+
+    # ------------------------------------------------------------------
+    # Pure computation helpers — no self state is read or written
+    # ------------------------------------------------------------------
+    def _generate_model(self, data, amplitude, radius, index, theta, x, y, ellipticity):
+        lim = self.image_lim
+        shape = data['shape']
+        xg, yg = np.meshgrid(np.arange(shape[1]), np.arange(shape[0]))
+        model = Sersic2D(
+            amplitude=amplitude, r_eff=radius, n=index,
+            x_0=x + lim, y_0=y + lim,
+            ellip=ellipticity, theta=np.deg2rad(theta),
         )
-        self.model_image = self.model(x, y)
-        self.model_image = convolve_fft(self.model_image, self.PSF_kernel)
-        self.residual = (self.image - self.model_image)/self.image_error
-    
-    def calculate_score(self):
-        chi_squared = np.nansum(((self.image - self.model_image) / self.image_error) ** 2)
-        dof = np.sum(~np.isnan(self.image)) - 7
-        self.score = chi_squared / dof if dof > 0 else np.nan
-        return self.score
-    
+        model_image = convolve_fft(model(xg, yg), data['PSF_kernel'])
+        residual = (data['image'] - model_image) / data['image_error']
+        return model_image, residual
+
+    @staticmethod
+    def _calculate_score(data, model_image):
+        chi2 = np.nansum(((data['image'] - model_image) / data['image_error']) ** 2)
+        dof = np.sum(~np.isnan(data['image'])) - 7
+        return chi2 / dof if dof > 0 else np.nan
+
+    @staticmethod
+    def _create_plot(data, model_image, residual, score):
+        vmin = np.percentile(data['image'], 1)
+        vmax = np.percentile(data['image'], 99.5)
+
+        def asinh_stretch(d):
+            a = 0.1
+            return np.arcsinh((d - vmin) / (vmax - vmin) / a) / np.arcsinh(1.0 / a)
+
+        fig = make_subplots(
+            rows=1, cols=3,
+            subplot_titles=("Observed Image", "Your Model", "Difference"),
+            horizontal_spacing=0.1,
+        )
+        fig.add_trace(go.Heatmap(z=asinh_stretch(data['image']), colorscale='Viridis',
+                                  showscale=True, colorbar=dict(x=0.30, len=0.8, title="Brightness")),
+                      row=1, col=1)
+        fig.add_trace(go.Heatmap(z=asinh_stretch(model_image), colorscale='Viridis',
+                                  showscale=True, colorbar=dict(x=0.63, len=0.8, title="Brightness")),
+                      row=1, col=2)
+        fig.add_trace(go.Heatmap(z=residual, colorscale='RdBu_r', showscale=True,
+                                  zmid=0, zmin=-5, zmax=5,
+                                  colorbar=dict(x=1.0, len=0.8, title="Residual")),
+                      row=1, col=3)
+        fig.update_layout(
+            title=f"JWST Photometry Fit — score = {score:.2f} (lower is better)",
+            template="plotly_white", height=600, showlegend=False,
+        )
+        for col in range(1, 4):
+            fig.update_xaxes(scaleanchor=f"y{'' if col == 1 else col}", scaleratio=1,
+                             constrain="domain", row=1, col=col)
+            fig.update_yaxes(constrain="domain", row=1, col=col)
+        return fig
+
+    # ------------------------------------------------------------------
+    # Layout
+    # ------------------------------------------------------------------
     def setup_layout(self):
         self.app.layout = dbc.Container([
-            dbc.Row([dbc.Col([html.H1("JADES Photometry Lab", className="text-center mb-4")], width=12)]),
+            # Per-session state — each browser tab gets its own Store
+            dcc.Store(id='active-dataset', data=self.initial_dataset),
+
+            dbc.Row([dbc.Col(html.H1("JADES Photometry Lab", className="text-center mb-4"), width=12)]),
+            dbc.Row([dbc.Col(
+                dbc.ButtonGroup([dbc.Button(k, id=f"btn-{k}", color="info", size="sm")
+                                 for k in self.data_files]),
+                width=12, className="mb-3",
+            )]),
+            dbc.Row([dbc.Col(dcc.Graph(id="main-plot", style={'height': '600px'}), width=12)],
+                    style={'margin-bottom': '60px'}),
+
             dbc.Row([
                 dbc.Col([
-                    dbc.ButtonGroup([
-                        dbc.Button(key, id=f"btn-{key}", color="info", size="sm") 
-                        for key in self.data_files.keys()
-                    ], className="mb-3")
-                ], width=12)
-            ]),
-            dbc.Row([dbc.Col([dcc.Graph(id="main-plot", style={'height': '600px'})], width=12)], style={'margin-bottom': '60px'}),
-            dbc.Row([
-                dbc.Col([
-                    html.Div([
-                        html.Label([
-                            "Peak size ",
-                            html.Span("ℹ", id="tooltip-amp", style={"color": "#17a2b8", "cursor": "pointer", "fontSize": "16px"})
-                        ], className="fw-bold mb-2"),
-                        dbc.Tooltip("Making the galaxy brighter/fainter", target="tooltip-amp", placement="right"),
-                        dcc.Slider(id="amp-slider", min=0.1, max=10, step=0.01, value=0.5,
-                                marks={i: str(i) for i in range(11)},
-                                tooltip={"placement": "bottom", "always_visible": True})
-                    ], className="mb-4"),
-                    
-                    html.Div([
-                        html.Label([
-                            "Size (pix) ",
-                            html.Span("ℹ", id="tooltip-size", style={"color": "#17a2b8", "cursor": "pointer", "fontSize": "16px"})
-                        ], className="fw-bold mb-2"),
-                        dbc.Tooltip("What is the size of the galaxy in pixels?", target="tooltip-size", placement="right"),
-                        dcc.Slider(id="size-slider", min=0, max=10, step=0.1, value=5,
-                                marks={i: str(i) for i in range(11)},
-                                tooltip={"placement": "bottom", "always_visible": True})
-                    ], className="mb-4"),
-                    
-                    html.Div([
-                        html.Label([
-                            "Sersic index ",
-                            html.Span("ℹ", id="tooltip-sersic", style={"color": "#17a2b8", "cursor": "pointer", "fontSize": "16px"})
-                        ], className="fw-bold mb-2"),
-                        dbc.Tooltip("Shape parameter: n=1 (exponential disk), n=4 (de Vaucouleurs/elliptical)", target="tooltip-sersic", placement="right"),
-                        dcc.Slider(id="Sersic-slider", min=0.0, max=5, step=0.1, value=2,
-                                marks={0: '0', 1: '1', 2: '2', 3: '3', 4: '4'},
-                                tooltip={"placement": "bottom", "always_visible": True})
-                    ], className="mb-4"),
-                    
-                    html.Div([
-                        html.Label([
-                            "Angle ",
-                            html.Span("ℹ", id="tooltip-angle", style={"color": "#17a2b8", "cursor": "pointer", "fontSize": "16px"})
-                        ], className="fw-bold mb-2"),
-                        dbc.Tooltip("How is the galaxy angled on the sky?", target="tooltip-angle", placement="right"),
-                        dcc.Slider(id="angle-slider", min=0.0, max=180, step=1, value=90,
-                                marks={0: 'horizontal', 45: '45', 90: 'vertical', 135: '135', 180: 'horizontal'},
-                                tooltip={"placement": "bottom", "always_visible": True})
-                    ], className="mb-4")
+                    _labeled_slider("Peak size",       "tooltip-amp",   "Making the galaxy brighter/fainter",
+                                    "amp-slider",      0.1, 10, 0.01, 0.5, {i: str(i) for i in range(11)}),
+                    _labeled_slider("Size (pix)",      "tooltip-size",  "Size of the galaxy in pixels",
+                                    "size-slider",     0, 10, 0.1, 5, {i: str(i) for i in range(11)}),
+                    _labeled_slider("Sersic index",    "tooltip-sersic","n=1 disk, n=4 elliptical",
+                                    "Sersic-slider",   0.0, 5, 0.1, 2, {0:'0',1:'1',2:'2',3:'3',4:'4'}),
+                    _labeled_slider("Angle",           "tooltip-angle", "Orientation on sky",
+                                    "angle-slider",    0, 180, 1, 90,
+                                    {0:'horizontal',45:'45',90:'vertical',135:'135',180:'horizontal'}),
                 ], width=6),
-                
                 dbc.Col([
-                    html.Div([
-                        html.Label([
-                            "X ",
-                            html.Span("ℹ", id="tooltip-x", style={"color": "#17a2b8", "cursor": "pointer", "fontSize": "16px"})
-                        ], className="fw-bold mb-2"),
-                        dbc.Tooltip("X-position offset of galaxy center in pixels", target="tooltip-x", placement="right"),
-                        dcc.Slider(id="x-slider", min=-5, max=5, step=0.1, value=0,
-                                marks={i: str(i) for i in range(-5, 6)},
-                                tooltip={"placement": "bottom", "always_visible": True})
-                    ], className="mb-4"),
-                    
-                    html.Div([
-                        html.Label([
-                            "Y ",
-                            html.Span("ℹ", id="tooltip-y", style={"color": "#17a2b8", "cursor": "pointer", "fontSize": "16px"})
-                        ], className="fw-bold mb-2"),
-                        dbc.Tooltip("Y-position offset of galaxy center in pixels", target="tooltip-y", placement="right"),
-                        dcc.Slider(id="y-slider", min=-5, max=5, step=0.1, value=0,
-                                marks={i: str(i) for i in range(-5, 6)},
-                                tooltip={"placement": "bottom", "always_visible": True})
-                    ], className="mb-4"),
-                    
-                    html.Div([
-                        html.Label([
-                            "Ellipticity ",
-                            html.Span("ℹ", id="tooltip-ellip", style={"color": "#17a2b8", "cursor": "pointer", "fontSize": "16px"})
-                        ], className="fw-bold mb-2"),
-                        dbc.Tooltip("Galaxy ellipticity: 0=circular, 1=highly elongated", target="tooltip-ellip", placement="right"),
-                        dcc.Slider(id="ellipticity-slider", min=0, max=1, step=0.01, value=0.5,
-                                marks={0: 'Circle', 0.5: '0.5', 1: 'Line'},
-                                tooltip={"placement": "bottom", "always_visible": True})
-                    ], className="mb-4")
-                ], width=6)
-            ], className="mt-3")
+                    _labeled_slider("X",               "tooltip-x",     "X-offset of galaxy centre (px)",
+                                    "x-slider",        -5, 5, 0.1, 0, {i: str(i) for i in range(-5, 6)}),
+                    _labeled_slider("Y",               "tooltip-y",     "Y-offset of galaxy centre (px)",
+                                    "y-slider",        -5, 5, 0.1, 0, {i: str(i) for i in range(-5, 6)}),
+                    _labeled_slider("Ellipticity",     "tooltip-ellip", "0=circular, 1=elongated",
+                                    "ellipticity-slider", 0, 1, 0.01, 0.5, {0:'Circle',0.5:'0.5',1:'Line'}),
+                ], width=6),
+            ], className="mt-3"),
         ], fluid=True)
-    
+
+    # ------------------------------------------------------------------
+    # Callbacks
+    # ------------------------------------------------------------------
     def setup_callbacks(self):
         @self.app.callback(
-            Output("main-plot", "figure"),
-            [Input("amp-slider", "value"), Input("size-slider", "value"), Input("Sersic-slider", "value"),
-             Input("angle-slider", "value"), Input("x-slider", "value"), Input("y-slider", "value"),
-             Input("ellipticity-slider", "value")] +
-            [Input(f"btn-{key}", "n_clicks") for key in self.data_files.keys()],
-            prevent_initial_call=False
+            Output("main-plot",      "figure"),
+            Output("active-dataset", "data"),
+            [Input("amp-slider",         "value"),
+             Input("size-slider",        "value"),
+             Input("Sersic-slider",      "value"),
+             Input("angle-slider",       "value"),
+             Input("x-slider",           "value"),
+             Input("y-slider",           "value"),
+             Input("ellipticity-slider", "value")]
+            + [Input(f"btn-{k}", "n_clicks") for k in self.data_files],
+            State("active-dataset", "data"),
+            prevent_initial_call=False,
         )
-        def update_app(*args):
+        def update_app(amplitude, radius, index, theta, x, y, ellipticity,
+                       *btn_and_state):
+            # Unpack button clicks and the State value (last element)
+            btn_clicks      = btn_and_state[:-1]
+            active_dataset  = btn_and_state[-1] or self.initial_dataset
+
+            # Determine whether a dataset button was clicked
             ctx = callback_context
-            self.amplitude, self.radius, self.index = args[0], args[1], args[2]
-            self.theta, self.x, self.y, self.ellipticity = args[3], args[4], args[5], args[6]
-            
             if ctx.triggered:
                 trigger_id = ctx.triggered[0]['prop_id'].split('.')[0]
-                for i, key in enumerate(self.data_files.keys()):
-                    if trigger_id == f"btn-{key}" and args[7 + i]:
-                        self.load_data(key)
+                for i, key in enumerate(self.data_files):
+                    if trigger_id == f"btn-{key}" and btn_clicks[i]:
+                        active_dataset = key
                         break
-            
-            self.generate_model()
-            return self.create_main_plot()
-    
-    def create_main_plot(self):
-        vmin, vmax = np.percentile(self.image, 1), np.percentile(self.image, 99.5)
-        def asinh_stretch(data, vmin, vmax, a):
-            return np.arcsinh((data - vmin) / (vmax - vmin) / a) / np.arcsinh(1 / a)
-        
-        image_scaled = asinh_stretch(self.image, vmin, vmax, 0.1)
-        model_scaled = asinh_stretch(self.model_image, vmin, vmax, 0.1)
-        
-        fig = make_subplots(rows=1, cols=3, subplot_titles=("Observed Image", "Your Model", "Difference"), horizontal_spacing=0.1)
-        fig.add_trace(go.Heatmap(z=image_scaled, colorscale='Viridis', showscale=True, 
-                                  colorbar=dict(x=0.3, len=0.8, title="Brightness")), row=1, col=1)
-        fig.add_trace(go.Heatmap(z=model_scaled, colorscale='Viridis', showscale=True,
-                                  colorbar=dict(x=0.63, len=0.8, title="Brightness")), row=1, col=2)
-        fig.add_trace(go.Heatmap(z=self.residual, colorscale='RdBu_r', showscale=True, zmid=0, zmin=-5, zmax=5,
-                                  colorbar=dict(x=1, len=0.8, title="Residual")), row=1, col=3)
-        
-        fig.update_layout(title=f"JWST Photometry Fit, score= {self.calculate_score():.2f}, lower is better",
-                         template="plotly_white", height=600, showlegend=False)
-        fig.update_xaxes(scaleanchor="y", scaleratio=1, row=1, col=1, constrain="domain")
-        fig.update_yaxes(constrain="domain", row=1, col=1)
-        fig.update_xaxes(scaleanchor="y2", scaleratio=1, row=1, col=2, constrain="domain")
-        fig.update_yaxes(constrain="domain", row=1, col=2)
-        fig.update_xaxes(scaleanchor="y3", scaleratio=1, row=1, col=3, constrain="domain")
-        fig.update_yaxes(constrain="domain", row=1, col=3)
-        return fig
+
+            # All computation is local — no writes to self
+            data        = self._cache.get(active_dataset, self._cache[self.initial_dataset])
+            model_image, residual = self._generate_model(data, amplitude, radius, index,
+                                                         theta, x, y, ellipticity)
+            score = self._calculate_score(data, model_image)
+            fig   = self._create_plot(data, model_image, residual, score)
+            return fig, active_dataset
+
+
+# ------------------------------------------------------------------
+# Small helper to reduce layout boilerplate
+# ------------------------------------------------------------------
+def _labeled_slider(label, tooltip_id, tooltip_text, slider_id, mn, mx, step, value, marks):
+    return html.Div([
+        html.Label([
+            label + " ",
+            html.Span("ℹ", id=tooltip_id,
+                      style={"color": "#17a2b8", "cursor": "pointer", "fontSize": "16px"}),
+        ], className="fw-bold mb-2"),
+        dbc.Tooltip(tooltip_text, target=tooltip_id, placement="right"),
+        dcc.Slider(id=slider_id, min=mn, max=mx, step=step, value=value,
+                   marks=marks, tooltip={"placement": "bottom", "always_visible": True}),
+    ], className="mb-4")
