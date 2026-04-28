@@ -46,11 +46,6 @@ def _load_data(dataset_key):
         flux  = hdu['DATA'].data * 1e-7
         error = hdu['ERR'].data * 1e-7
 
-    if dataset_key == 'COS30':
-        wave  = np.append(wave,  np.linspace(5.32, 5.5, 32))
-        flux  = np.append(flux,  np.zeros(32))
-        error = np.append(error, np.ones(32) * 0.001e-18)
-
     result = dict(wave=wave, flux=flux, error=error,
                   z=config['z'], target=config['target'])
     _DATA_CACHE[dataset_key] = result
@@ -71,30 +66,6 @@ def _load_r_curve():
 # ============================================================================
 # Pure computation helpers (no class state)
 # ============================================================================
-
-def _build_model_components(z, Mass, age, tau, Z, U, Av, r_curve=None):
-    delayed = {'age': age, 'tau': tau, 'massformed': Mass, 'metallicity': Z}
-    dust    = {'type': 'Calzetti', 'Av': Av}
-    mc = {'redshift': z, 'delayed': delayed, 'dust': dust}
-    if U > -4:
-        mc['nebular'] = {'logU': U}
-    if r_curve is not None:
-        mc['R_curve'] = r_curve
-    return mc
-
-
-def _generate_spectrum(dataset_key, Mass, age, tau, Z, U, Av):
-    """Return model_spectrum (N×2 array) or None. Entirely local — no shared state."""
-    data = _load_data(dataset_key)
-    try:
-        r_curve = _load_r_curve()
-    except Exception:
-        r_curve = None
-
-    mc = _build_model_components(data['z'], Mass, age, tau, Z, U, Av, r_curve)
-    model = pipes.model_galaxy(mc, spec_wavs=data['wave'] * 1e4)
-    model.update(mc)
-    return model.spectrum, model.sfh   # both local
 
 
 def _get_emission_lines(z):
@@ -294,6 +265,34 @@ class Stellar_pop_lab:
         self._setup_layout()
         self._setup_callbacks()
 
+        self.r_curve = _load_r_curve()
+
+        pthtemp = os.path.join(sys.path[0] if sys.path[0] else '.', 'Data', '007437_prism_clear_v3.1_1D.fits')
+        with pyfits.open(pthtemp) as hdul:
+            self.obs_wave = hdul['WAVELENGTH'].data * 1e6
+
+        mc = self._build_model_components(5.5, 8, 1000, 1.0, 0.02, -2.0, 0.1)
+        self.model = pipes.model_galaxy(mc, spec_wavs=self.obs_wave * 1e4)
+
+
+    def _build_model_components(self, z, Mass, age, tau, Z, U, Av):
+        delayed = {'age': age, 'tau': tau, 'massformed': Mass, 'metallicity': Z}
+        dust    = {'type': 'Calzetti', 'Av': Av}
+        mc = {'redshift': z, 'delayed': delayed, 'dust': dust}
+        if U > -4:
+            mc['nebular'] = {'logU': U}
+        mc['R_curve'] = self.r_curve
+        return mc
+
+
+    def _generate_spectrum(self, dataset_key, Mass, age, tau, Z, U, Av):
+        """Return model_spectrum (N×2 array) or None. Entirely local — no shared state."""
+        data = _load_data(dataset_key)
+        
+        mc = self._build_model_components(data['z'], Mass, age, tau, Z, U, Av)
+        self.model.update(mc)
+        return self.model.spectrum, self.model.sfh   # both local
+
     # ------------------------------------------------------------------
     def _setup_layout(self):
         self.app.layout = dbc.Container([
@@ -441,7 +440,7 @@ class Stellar_pop_lab:
             sfh_obj        = None
             if BAGPIPES_AVAILABLE:
                 try:
-                    model_spectrum, sfh_obj = _generate_spectrum(
+                    model_spectrum, sfh_obj = self._generate_spectrum(
                         new_dataset, Mass, age, tau, Z, U, Av)
                 except Exception as e:
                     print(f"Model generation failed: {e}")
