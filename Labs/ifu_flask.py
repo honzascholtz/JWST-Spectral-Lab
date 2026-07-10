@@ -41,32 +41,41 @@ class IFU_lab:
         self.indc = [1,0]
         self.map_hdu_name = ['OIII', 'Narrow_vel']
         
-        # Load FITS data
-        with pyfits.open(filepath, memmap=False) as hdulist:
-            self.map = []
-            for ind, hdu_name in zip(self.indc, self.map_hdu_name):
-                self.map.append(hdulist[hdu_name].data[ind, :, :])
-            
-            self.yeval = hdulist['yeval'].data
-            self.flux = hdulist['flux'].data
-            self.error = hdulist['error'].data
-            names = [hdu.name for hdu in hdulist]
-            
-            if 'YEVAL_NAR' in names:
-                self.yeval_nar = hdulist['yeval_nar'].data
-            else:
-                self.yeval_nar = None
-                
-            if 'YEVAL_BRO' in names:
-                self.yeval_bro = hdulist['yeval_bro'].data
-            else:
-                self.yeval_bro = None
-            
-            self.header = hdulist['PRIMARY'].header
-            nwave = np.shape(self.yeval)[0]
-            self.obs_wave = (self.header['CRVAL3'] + 
-                           (np.arange(nwave) - (self.header['CRPIX3'] - 1.0)) * 
-                           self.header['CDELT3'])
+        # Load FITS data lazily via memmap and keep the file open for the
+        # lifetime of the app. The flux/error/yeval cubes are ~300MB each
+        # (~1.4GB total); most callbacks only touch a single spaxel or a
+        # 2-3 plane slice, so we let the OS page in only what's accessed
+        # instead of copying the whole cube into the process at startup.
+        # This also lets multiple Apache/mod_wsgi worker processes share
+        # the same pages via the OS page cache rather than each holding
+        # its own full copy.
+        self.hdulist = pyfits.open(filepath, memmap=True)
+        hdulist = self.hdulist
+
+        self.map = []
+        for ind, hdu_name in zip(self.indc, self.map_hdu_name):
+            self.map.append(np.array(hdulist[hdu_name].data[ind, :, :]))
+
+        self.yeval = hdulist['yeval'].data
+        self.flux = hdulist['flux'].data
+        self.error = hdulist['error'].data
+        names = [hdu.name for hdu in hdulist]
+
+        if 'YEVAL_NAR' in names:
+            self.yeval_nar = hdulist['yeval_nar'].data
+        else:
+            self.yeval_nar = None
+
+        if 'YEVAL_BRO' in names:
+            self.yeval_bro = hdulist['yeval_bro'].data
+        else:
+            self.yeval_bro = None
+
+        self.header = hdulist['PRIMARY'].header.copy()
+        nwave = np.shape(self.yeval)[0]
+        self.obs_wave = (self.header['CRVAL3'] +
+                       (np.arange(nwave) - (self.header['CRPIX3'] - 1.0)) *
+                       self.header['CDELT3'])
         
         # Store data shape first
         self.nwave = len(self.obs_wave)
