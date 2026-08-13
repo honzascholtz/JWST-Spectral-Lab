@@ -302,6 +302,14 @@ class Stellar_pop_lab:
             dbc.Row([dbc.Col([html.H1("JADES Stellar Population Lab",
                                       className="text-center mb-4")], width=12)]),
             dbc.Row([
+                dbc.Col(
+                    html.A("📖 Learn the science behind this lab",
+                           href="../learn-stellar-pop", target="_blank",
+                           style={'color': '#1b825e', 'fontWeight': 'bold', 'textDecoration': 'none'}),
+                    width=12, className="text-center mb-3"
+                )
+            ]),
+            dbc.Row([
                 dbc.Col([
                     dbc.ButtonGroup([
                         dbc.Button(key, id=f"btn-{key}", color="info", size="sm")

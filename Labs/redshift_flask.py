@@ -152,6 +152,14 @@ class Redshift_lab:
             dcc.Store(id='show-score-state', data=False),
 
             dbc.Row([dbc.Col(html.H1("JADES Redshift Lab", className="text-center mb-4"), width=12)]),
+            dbc.Row([
+                dbc.Col(
+                    html.A("📖 Learn the science behind this lab",
+                           href="../learn-redshift", target="_blank",
+                           style={'color': '#b22222', 'fontWeight': 'bold', 'textDecoration': 'none'}),
+                    width=12, className="text-center mb-3"
+                )
+            ]),
             dbc.Row([dbc.Col(
                 dbc.ButtonGroup([dbc.Button(k, id=f"btn-{k}", color="info", size="sm")
                                  for k in self.data_files]),

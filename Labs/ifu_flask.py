@@ -250,10 +250,18 @@ class IFU_lab:
         # Layout
         self.app.layout = dbc.Container([
             dbc.Row([
-                dbc.Col(html.H1("Interactive FITS Cube Visualization", 
+                dbc.Col(html.H1("Interactive FITS Cube Visualization",
                                className="text-center mb-4"), width=12)
             ]),
-            
+            dbc.Row([
+                dbc.Col(
+                    html.A("📖 Learn the science behind this lab",
+                           href="../learn-ifu", target="_blank",
+                           style={'color': '#ff6b35', 'fontWeight': 'bold', 'textDecoration': 'none'}),
+                    width=12, className="text-center mb-3"
+                )
+            ]),
+
             dbc.Row([
                 dbc.Col([
                     dcc.Graph(id='map0', figure=map0_fig, 
