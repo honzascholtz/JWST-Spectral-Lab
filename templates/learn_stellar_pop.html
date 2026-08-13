@@ -1,0 +1,115 @@
+{% extends "science_base.html" %}
+{% set page_title = "Stellar Population Lab" %}
+{% set eyebrow = "The Science Behind" %}
+{% set page_subtitle = "How the shape of a galaxy's spectrum reveals its mass, age, dust, and star-forming history." %}
+{% set accent_color = "#1b825e" %}
+{% set accent_soft = "#4fb98a" %}
+{% set lab_url = "stellar-pop/" %}
+{% set lab_short_name = "Stellar Population Lab" %}
+
+{% block content %}
+<div class="content-section">
+    <h2>A galaxy's spectrum is a fossil record</h2>
+    <p>
+        A galaxy's light is the combined glow of billions of individual stars of every age, plus glowing gas
+        and, often, a haze of dust. Crucially, a star's colour and brightness change predictably over its
+        life: young, massive stars burn hot and blue; older, lower-mass stars glow cooler and redder. That
+        means the overall shape of a galaxy's spectrum — how much light it puts out at each wavelength — is
+        a kind of fossil record of every generation of stars that ever formed inside it, still shining
+        together today. Astronomers use this fact to work backward from a measured spectrum to the physical
+        story of a galaxy: how much mass is locked up in stars, how those stars have been forming over
+        cosmic time, and how much interstellar dust is dimming and reddening the light along the way.
+    </p>
+
+    <h2>Building a model galaxy</h2>
+    <p>
+        This lab uses <strong>Bagpipes</strong>, a stellar population synthesis code used in real JADES research,
+        to build a model spectrum from a small number of physical ingredients:
+    </p>
+    <div class="callout">
+        <h3>The ingredients of a model spectrum</h3>
+        <ul class="mb-0">
+            <li><strong>Stellar mass</strong> — the total mass ever turned into stars, which mostly sets the
+                overall brightness.</li>
+            <li><strong>Age &amp; star formation history</strong> — <em>when</em> the galaxy formed most of its
+                stars. This lab uses a "delayed" history: star formation rises, peaks, then declines, controlled
+                by an age and a decline timescale (τ).</li>
+            <li><strong>Metallicity</strong> — the fraction of elements heavier than hydrogen and helium in the
+                stars, which subtly changes their colours.</li>
+            <li><strong>Ionisation parameter (log U)</strong> — how strongly the galaxy's young, hot stars are
+                ionising surrounding gas, which controls how bright its emission lines glow.</li>
+            <li><strong>Dust attenuation (Av)</strong> — how much interstellar dust dims and reddens the light,
+                using the Calzetti dust law measured from real star-forming galaxies.</li>
+        </ul>
+    </div>
+    <p>
+        Change any of these and the whole model spectrum reshapes — dust preferentially removes blue light,
+        making a galaxy look redder and fainter; adding older stars makes the spectrum redder without
+        touching the emission lines; more mass raises the whole curve. Because several of these effects push
+        the spectrum in similar directions, disentangling them is a genuine scientific challenge — a
+        red galaxy might be old, or dusty, or both, and only the detailed shape of the spectrum can tell you
+        which.
+    </p>
+
+    <h2>How the lab works</h2>
+    <div class="step-card d-flex">
+        <span class="step-number">1</span>
+        <div>
+            <strong>Choose a real JWST galaxy spectrum.</strong> Each button loads real NIRSpec data for a
+            galaxy from the JADES survey, already placed at its known, spectroscopically-confirmed redshift.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">2</span>
+        <div>
+            <strong>Adjust the six sliders</strong> — mass, ionisation, metallicity, age, decline timescale,
+            and dust — and watch the red model spectrum redraw over the black observed data in real time.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">3</span>
+        <div>
+            <strong>Watch the Star Formation History panel.</strong> As you move the age and τ sliders, this
+            panel shows how your model galaxy's star formation rate has risen and fallen since the Big Bang —
+            a direct visualisation of your model's implied history.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">4</span>
+        <div>
+            <strong>Check the Star-Forming Main Sequence.</strong> Real star-forming galaxies fall along a
+            tight relationship between stellar mass and star formation rate. This panel plots your model
+            galaxy against that relation, telling you whether it behaves like a typical star-forming galaxy,
+            a quiescent (retired) galaxy, or a starburst.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">5</span>
+        <div>
+            <strong>Minimise the score.</strong> The title bar reports a goodness-of-fit score comparing your
+            model to the data, accounting for the measurement noise — the lower it is, the more closely your
+            physical story matches what JWST actually saw.
+        </div>
+    </div>
+
+    <h2>Why it matters</h2>
+    <p>
+        This kind of spectral fitting is exactly how astronomers turn a JWST spectrum into the physical
+        properties reported in scientific papers: galaxy masses, ages, dust content, and star formation
+        rates across cosmic time. Comparing these properties across thousands of galaxies at different
+        redshifts is how we reconstruct the overall history of star formation in the universe — when it
+        peaked, how it has declined, and how dust has shaped what we're able to see.
+    </p>
+
+    <dl class="glossary">
+        <dt>Star formation history (SFH)</dt>
+        <dd>How a galaxy's rate of forming new stars has changed over cosmic time.</dd>
+        <dt>Metallicity</dt>
+        <dd>The abundance of elements heavier than helium, relative to the Sun.</dd>
+        <dt>Dust attenuation</dt>
+        <dd>The dimming and reddening of starlight caused by interstellar dust grains.</dd>
+        <dt>Star-forming main sequence</dt>
+        <dd>The tight observed relationship between a galaxy's stellar mass and its star formation rate.</dd>
+    </dl>
+</div>
+{% endblock %}

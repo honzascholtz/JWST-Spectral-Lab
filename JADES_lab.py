@@ -41,6 +41,27 @@ def health():
     return {'status': 'healthy', 'message': 'Flask + 4 Dash apps running'}
 
 # ============================================================================
+# "THE SCIENCE" PAGES
+# One static explainer page per lab, linked from the home page, describing
+# the astrophysics behind the activity and how the interactive tool works.
+# ============================================================================
+@server.route('/learn-photometry')
+def learn_photometry():
+    return render_template('learn_photometry.html')
+
+@server.route('/learn-redshift')
+def learn_redshift():
+    return render_template('learn_redshift.html')
+
+@server.route('/learn-stellar-pop')
+def learn_stellar_pop():
+    return render_template('learn_stellar_pop.html')
+
+@server.route('/learn-ifu')
+def learn_ifu():
+    return render_template('learn_ifu.html')
+
+# ============================================================================
 # INITIALIZE ALL FOUR APPS
 # Each app gets a unique app_name so Dash doesn't collide on asset routes.
 # Each lab's __init__ must accept app_name and pass it as the first argument

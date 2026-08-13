@@ -1,0 +1,118 @@
+{% extends "science_base.html" %}
+{% set page_title = "Photometry Lab" %}
+{% set eyebrow = "The Science Behind" %}
+{% set page_subtitle = "How astronomers measure the size, shape, and structure of a galaxy from a single JWST image." %}
+{% set accent_color = "#0066cc" %}
+{% set accent_soft = "#4d94ff" %}
+{% set lab_url = "photometry/" %}
+{% set lab_short_name = "Photometry Lab" %}
+
+{% block content %}
+<div class="content-section">
+    <h2>What is photometry?</h2>
+    <p>
+        "Photometry" simply means measuring light. When the James Webb Space Telescope points at a distant
+        galaxy, it doesn't take a snapshot the way a phone camera does — every pixel of the image records a
+        precise brightness value, the number of photons that landed on the detector during the exposure.
+        By carefully modelling how that brightness is arranged across the galaxy, astronomers can work out
+        its size, its shape, and how tightly its stars are packed together — without ever needing to travel
+        there.
+    </p>
+
+    <h2>Galaxies aren't all built the same way</h2>
+    <p>
+        If you plot the brightness of a galaxy against distance from its centre, you get a curve that falls
+        off smoothly outward — but the exact shape of that fall-off is different for different kinds of
+        galaxies. Flat, star-forming disk galaxies (like our own Milky Way) fade gently. Puffy, old elliptical
+        galaxies, built up from mergers of smaller galaxies, are very concentrated in the centre and fade
+        much more sharply. In 1968, the astronomer José Sérsic proposed a single mathematical formula
+        flexible enough to describe both extremes — and everything in between:
+    </p>
+    <div class="callout">
+        <h3>The Sérsic profile</h3>
+        <p class="mb-0">
+            Brightness falls off with distance <em>r</em> from the galaxy's centre roughly as
+            <code>I(r) ∝ exp(-r<sup>1/n</sup>)</code>. The single number <strong>n</strong>, the
+            <strong>Sérsic index</strong>, controls the shape of that fall-off:
+        </p>
+        <ul class="mt-2 mb-0">
+            <li><strong>n ≈ 1</strong> — a smooth exponential disk, typical of spiral / star-forming galaxies.</li>
+            <li><strong>n ≈ 4</strong> — a steep, centrally concentrated profile, typical of elliptical galaxies
+                and the bulges of massive galaxies.</li>
+        </ul>
+    </div>
+    <p>
+        Alongside <em>n</em>, astronomers also fit an <strong>effective radius</strong> (the size within which
+        half the galaxy's light is contained), an <strong>ellipticity</strong> and <strong>position angle</strong>
+        (how squashed the galaxy looks, and which way it's tilted on the sky), and a central position and
+        brightness. Together, these numbers are a compact summary of a galaxy's structure — and comparing
+        them across thousands of galaxies at different cosmic epochs is one of the main ways we learn how
+        galaxies grow and change shape over billions of years of cosmic history.
+    </p>
+
+    <h2>Why it's harder than it sounds: the PSF</h2>
+    <p>
+        No telescope is perfect. Even a point of light — a single unresolved star — is smeared out slightly
+        by the telescope's optics into a small blob called the <strong>point spread function</strong>, or PSF.
+        For a very distant, compact galaxy, this blurring can be a significant fraction of its apparent size,
+        so a fair model has to include it. That's why, in the lab, your Sérsic model isn't compared to the
+        image directly — it's first blurred by JWST's PSF (the same way the real light was blurred by the
+        telescope) before being compared to what NIRCam actually recorded.
+    </p>
+
+    <h2>How the lab works</h2>
+    <div class="step-card d-flex">
+        <span class="step-number">1</span>
+        <div>
+            <strong>Pick a real JWST galaxy.</strong> The buttons across the top load real NIRCam imaging
+            of galaxies discovered by the JADES survey, at different distances and with different shapes.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">2</span>
+        <div>
+            <strong>Build your model.</strong> Seven sliders control your Sérsic model: peak brightness,
+            size, Sérsic index, orientation angle, x/y position, and ellipticity. Every time you move a
+            slider, the lab regenerates your model, blurs it by JWST's PSF, and redraws it.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">3</span>
+        <div>
+            <strong>Compare three panels.</strong> The <em>Observed Image</em> is the real data. <em>Your Model</em>
+            is what your current sliders produce. The <em>Difference</em> panel shows what's left over once your
+            model is subtracted from the data — red and blue patches mean your model is too faint or too bright
+            in that spot.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">4</span>
+        <div>
+            <strong>Chase a low score.</strong> The score is a reduced chi-squared statistic — it measures, on
+            average, how many "standard deviations" your model is away from the real data at each pixel. A score
+            close to 1 means an excellent fit; a large score means there's still real structure in the difference
+            panel that your model hasn't captured.
+        </div>
+    </div>
+
+    <h2>Why this matters</h2>
+    <p>
+        This is essentially the same fitting process used in real JADES research, just automated and applied
+        to thousands of galaxies at once instead of by hand with sliders. By measuring how the sizes and
+        shapes of galaxies change with cosmic time, astronomers can test theories of how galaxies assemble:
+        whether they grow smoothly from the inside out, or whether mergers between galaxies play the dominant
+        role in building the massive ellipticals we see in the local universe today.
+    </p>
+
+    <dl class="glossary">
+        <dt>Sérsic index (n)</dt>
+        <dd>A single number describing how centrally concentrated a galaxy's light is.</dd>
+        <dt>Effective radius</dt>
+        <dd>The radius of the circle containing half of a galaxy's total light.</dd>
+        <dt>Point Spread Function (PSF)</dt>
+        <dd>The blurred image a telescope produces of an idealised point of light, set by the telescope's optics.</dd>
+        <dt>Reduced chi-squared</dt>
+        <dd>A statistic comparing model to data, accounting for measurement noise; close to 1 indicates a good fit.</dd>
+    </dl>
+</div>
+{% endblock %}

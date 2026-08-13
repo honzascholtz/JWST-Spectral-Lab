@@ -1,0 +1,107 @@
+{% extends "science_base.html" %}
+{% set page_title = "Redshift Lab" %}
+{% set eyebrow = "The Science Behind" %}
+{% set page_subtitle = "How astronomers measure the distance to a galaxy that's too far away to ever visit." %}
+{% set accent_color = "#b22222" %}
+{% set accent_soft = "#e0645a" %}
+{% set lab_url = "redshift/" %}
+{% set lab_short_name = "Redshift Lab" %}
+
+{% block content %}
+<div class="content-section">
+    <h2>The universe is expanding — and stretching light with it</h2>
+    <p>
+        Almost a century ago, Edwin Hubble noticed that distant galaxies are all moving away from us, and the
+        further away a galaxy is, the faster it appears to recede. We now understand this as a consequence of
+        the expansion of space itself: as light from a distant galaxy travels toward us across billions of
+        years, the space it's travelling through is stretching, and the light's wavelength stretches along
+        with it. Light that left a galaxy as blue or ultraviolet light can arrive at JWST stretched all the
+        way into the infrared. Astronomers call this stretching <strong>redshift</strong>, denoted <em>z</em>,
+        because longer wavelengths shift toward the red end of the spectrum.
+    </p>
+    <div class="callout">
+        <h3>Redshift as a distance — and time — machine</h3>
+        <p class="mb-0">
+            A redshift of <em>z</em> means a wavelength has been stretched by a factor of <em>(1 + z)</em>.
+            Because we know how fast the universe expands, a measured redshift tells us both how far away a
+            galaxy is <em>and</em> how long ago we're seeing it — its "lookback time." A galaxy at
+            <em>z</em> ≈ 14, the kind of target in this lab, is seen as it was only a couple hundred million
+            years after the Big Bang.
+        </p>
+    </div>
+
+    <h2>Reading a spectrum instead of a picture</h2>
+    <p>
+        A photo of a galaxy tells you its shape, but not its distance. To measure redshift precisely, astronomers
+        instead spread a galaxy's light out into a spectrum — brightness as a function of wavelength — using
+        JWST's NIRSpec instrument. Hot gas inside a galaxy, ionised by young stars, emits light very strongly
+        at specific, well-known wavelengths: hydrogen's Hα and Hβ lines, doubly-ionised oxygen's [OIII] line,
+        and several others. In the galaxy's own rest frame, these lines always sit at the same wavelengths —
+        physics doesn't change across the universe. What changes is <em>where those lines show up in our
+        spectrum</em>, because the whole spectrum has been redshifted together.
+    </p>
+    <p>
+        Finding the redshift is therefore a matter of pattern matching: find the value of <em>z</em> that
+        shifts the known rest-frame positions of these emission lines onto the bright peaks actually seen in
+        the data. Because several lines have known relative spacings, a good redshift lines up <em>all</em>
+        of them simultaneously — a single matching line could be a coincidence, but four or five lines lining
+        up together is essentially unambiguous.
+    </p>
+
+    <h2>How the lab works</h2>
+    <div class="step-card d-flex">
+        <span class="step-number">1</span>
+        <div>
+            <strong>Choose a real JWST/NIRSpec spectrum.</strong> Each button loads the measured spectrum of
+            a real JADES galaxy — some nearby and bright, some among the most distant galaxies ever confirmed.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">2</span>
+        <div>
+            <strong>Drag the redshift slider.</strong> As you change <em>z</em>, the coloured dashed lines
+            marking known emission-line wavelengths slide across the plot in real time — they're being
+            redshifted exactly the way light really is.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">3</span>
+        <div>
+            <strong>Line them up.</strong> Your job is to find the redshift where the dashed lines fall
+            precisely on top of the real bumps and peaks in the black spectrum — that's the galaxy's true
+            redshift.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">4</span>
+        <div>
+            <strong>Check your score.</strong> "Show Score" converts the difference between your guess and the
+            true redshift into a velocity offset in km/s (using <code>Δv = c · Δz / (1+z)</code>) — the same
+            way astronomers quote how precisely a redshift has been measured. Within ±1000 km/s is an excellent
+            match.
+        </div>
+    </div>
+
+    <h2>Why it matters: the race to the cosmic dawn</h2>
+    <p>
+        One of JWST's flagship goals — and a central aim of the JADES survey — is finding and confirming the
+        most distant, earliest galaxies that exist, right at the "cosmic dawn" when the first stars and
+        galaxies were forming. A galaxy's brightness and colour in an image alone can only give a rough,
+        uncertain estimate of its redshift; only a spectrum, with real emission lines matched with confidence,
+        can confirm it. Every record-breaking distant galaxy JWST has announced was confirmed exactly this
+        way — matching known lines to a measured spectrum, just like you're doing in this lab.
+    </p>
+
+    <dl class="glossary">
+        <dt>Redshift (z)</dt>
+        <dd>The fractional stretch of light's wavelength caused by the universe's expansion during its
+            journey to us; larger z means further away and further back in time.</dd>
+        <dt>Emission line</dt>
+        <dd>A wavelength at which hot gas emits light very strongly, at a fixed, known rest-frame wavelength.</dd>
+        <dt>Lookback time</dt>
+        <dd>How long ago the light we're observing was actually emitted.</dd>
+        <dt>Cosmic dawn</dt>
+        <dd>The era, a few hundred million years after the Big Bang, when the first stars and galaxies formed.</dd>
+    </dl>
+</div>
+{% endblock %}

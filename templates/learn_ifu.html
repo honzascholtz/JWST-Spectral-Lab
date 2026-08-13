@@ -1,0 +1,106 @@
+{% extends "science_base.html" %}
+{% set page_title = "IFS Kinematics Lab" %}
+{% set eyebrow = "The Science Behind" %}
+{% set page_subtitle = "How a 3D data cube reveals gas moving, rotating, and blowing out of a distant galaxy." %}
+{% set accent_color = "#ff6b35" %}
+{% set accent_soft = "#ffab7a" %}
+{% set lab_url = "ifu/" %}
+{% set lab_short_name = "IFS Kinematics Lab" %}
+
+{% block content %}
+<div class="content-section">
+    <h2>A spectrum for every pixel</h2>
+    <p>
+        A normal spectrograph gives you one spectrum — the combined light from an entire galaxy, or a single
+        narrow slit across it. An <strong>Integral Field Spectrograph (IFS)</strong>, like JWST's NIRSpec used
+        in "IFU mode," does something much more powerful: it captures a full spectrum at <em>every single
+        pixel</em> across a galaxy's image simultaneously. The result isn't a single image or a single
+        spectrum, but a three-dimensional <strong>data cube</strong> — two spatial dimensions (x and y, across
+        the sky) and one spectral dimension (wavelength), for every "spaxel" (spatial pixel) in the field.
+        That means you can study how a galaxy's gas and light change not just from place to place, but
+        precisely which wavelengths are doing what at each location.
+    </p>
+
+    <h2>Turning a shifted line into a velocity</h2>
+    <p>
+        Just as the redshift of an entire galaxy tells us how fast the universe carried it away from us
+        (see the Redshift Lab), a small shift in an emission line's wavelength <em>within</em> a galaxy tells
+        us how fast the gas at that specific point is moving toward or away from us, via the Doppler effect.
+        Gas moving toward us is shifted slightly to shorter (bluer) wavelengths; gas moving away is shifted to
+        longer (redder) wavelengths. By measuring the precise central wavelength of a bright emission line
+        — here, doubly-ionised oxygen, [OIII] — at every spaxel across the galaxy, and comparing it to the
+        line's expected position, astronomers can build a full 2D map of gas velocity across the galaxy.
+    </p>
+    <div class="callout">
+        <h3>Narrow and broad components</h3>
+        <p class="mb-0">
+            Emission lines aren't infinitely sharp — gas moving at different speeds along the line of sight
+            smears a line out. Gas settled into a galaxy's rotating disk typically produces a
+            <strong>narrow</strong> line, while gas caught up in a fast, turbulent outflow — often driven by
+            supernovae or an actively feeding black hole — produces a much <strong>broader</strong> line, since
+            it contains a wide spread of velocities. Fitting both a narrow and a broad component to the same
+            line lets astronomers separate calm, rotating gas from violent outflowing gas in the same galaxy.
+        </p>
+    </div>
+
+    <h2>How the lab works</h2>
+    <p>
+        The data in this lab comes from a real GA-NIFS/JWST NIRSpec IFU observation of a distant galaxy,
+        already reduced into maps and spectra.
+    </p>
+    <div class="step-card d-flex">
+        <span class="step-number">1</span>
+        <div>
+            <strong>Two summary maps.</strong> The left map shows the total [OIII] flux at every spaxel — in
+            effect, a picture of where the ionised gas is brightest. The middle map shows the fitted gas
+            velocity at every spaxel, colour-coded blue (approaching) to red (receding) — a direct picture of
+            the galaxy's kinematics.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">2</span>
+        <div>
+            <strong>The wavelength slice map.</strong> The right-hand map shows the raw brightness of the cube
+            at one specific wavelength (summed over a few adjacent channels), letting you see which spaxels
+            are lighting up as you scan through the spectrum with the slider or the +/− buttons.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">3</span>
+        <div>
+            <strong>Click any spaxel.</strong> Clicking anywhere on the maps loads the full observed spectrum
+            at that exact location, along with the best-fit model: the black "Observed" data, the red total
+            "Model," and — where fitted — the green "Narrow" and purple "Broad" kinematic components separately.
+        </div>
+    </div>
+    <div class="step-card d-flex">
+        <span class="step-number">4</span>
+        <div>
+            <strong>Explore the pattern.</strong> Try clicking spaxels across the galaxy: do you see the
+            velocity smoothly swing from blue to red across the disk, the signature of ordered rotation? Are
+            there spots where the broad component becomes strong, hinting at an outflow of fast-moving gas?
+        </div>
+    </div>
+
+    <h2>Why it matters</h2>
+    <p>
+        Mapping motion, not just brightness, is how astronomers find rotating disks in the early universe,
+        measure how much mass a galaxy has piled up by seeing how fast it spins, and catch galactic winds
+        and outflows in the act — gas being blown out of a galaxy by intense star formation or a supermassive
+        black hole, which can shut down future star formation entirely. Data cubes like this one, from
+        surveys such as GA-NIFS, are one of the main tools astronomers use to understand not just what
+        distant galaxies look like, but how they are physically assembling and evolving.
+    </p>
+
+    <dl class="glossary">
+        <dt>Integral Field Spectrograph (IFS/IFU)</dt>
+        <dd>An instrument that records a full spectrum at every spatial pixel across an image at once.</dd>
+        <dt>Spaxel</dt>
+        <dd>A "spatial pixel" — one (x, y) location in an IFU data cube, with its own full spectrum.</dd>
+        <dt>Doppler shift</dt>
+        <dd>The change in an emission line's wavelength caused by the motion of the gas producing it.</dd>
+        <dt>Outflow</dt>
+        <dd>Gas physically ejected from a galaxy at high speed, often traced by a broad emission-line component.</dd>
+    </dl>
+</div>
+{% endblock %}

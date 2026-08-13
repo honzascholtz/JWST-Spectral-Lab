@@ -117,6 +117,29 @@
         .footer-link:hover {
             color: #0088ff;
         }
+        .btn-learn {
+            border: 2px solid;
+            background: white;
+            font-weight: bold;
+            border-radius: 25px;
+            padding: 10px 30px;
+            transition: all 0.3s ease;
+        }
+        .btn-learn-photometry { color: #0066cc; border-color: #0066cc; }
+        .btn-learn-photometry:hover { background: #0066cc; color: white; }
+        .btn-learn-redshift { color: #b22222; border-color: #b22222; }
+        .btn-learn-redshift:hover { background: #b22222; color: white; }
+        .btn-learn-stellar { color: #1b825e; border-color: #1b825e; }
+        .btn-learn-stellar:hover { background: #1b825e; color: white; }
+        .btn-learn-ifs { color: #ff6b35; border-color: #ff6b35; }
+        .btn-learn-ifs:hover { background: #ff6b35; color: white; }
+        .btn-row {
+            display: flex;
+            gap: 10px;
+        }
+        .btn-row .btn-launch {
+            flex: 1;
+        }
     </style>
 </head>
 <body>
@@ -157,7 +180,10 @@
                             <li>✓ Determining shapes and sizes of galaxies with NIRCam imaging</li>
                             <li>✓ Sersic profile fitting</li>
                         </ul>
-                        <a href="photometry/" target="_blank" class="btn btn-launch btn-photometry w-100">Launch Photometry Lab</a>
+                        <div class="btn-row">
+                            <a href="{{ url_for('learn_photometry') }}" class="btn btn-learn btn-learn-photometry">Learn the Science</a>
+                            <a href="photometry/" target="_blank" class="btn btn-launch btn-photometry">Launch Lab</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -175,7 +201,10 @@
                             <li>✓ Redshift measurement</li>
                             <li>✓ Find the most distant galaxies</li>
                         </ul>
-                        <a href="redshift/" target="_blank" class="btn btn-launch btn-redshift w-100">Launch Redshift Lab</a>
+                        <div class="btn-row">
+                            <a href="{{ url_for('learn_redshift') }}" class="btn btn-learn btn-learn-redshift">Learn the Science</a>
+                            <a href="redshift/" target="_blank" class="btn btn-launch btn-redshift">Launch Lab</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -196,7 +225,10 @@
                             <li>✓ Star formation history</li>
                             <li>✓ Physical parameters</li>
                         </ul>
-                        <a href="stellar-pop/" target="_blank" class="btn btn-launch btn-stellar w-100">Launch Stellar Lab</a>
+                        <div class="btn-row">
+                            <a href="{{ url_for('learn_stellar_pop') }}" class="btn btn-learn btn-learn-stellar">Learn the Science</a>
+                            <a href="stellar-pop/" target="_blank" class="btn btn-launch btn-stellar">Launch Lab</a>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -215,7 +247,10 @@
                             <li>✓ Dispersion measurements</li>
                             <li>✓ Kinematic modeling and interpretation</li>
                         </ul>
-                        <a href="ifu/" target="_blank" class="btn btn-launch btn-ifs w-100">Launch Kinematics Lab</a>
+                        <div class="btn-row">
+                            <a href="{{ url_for('learn_ifu') }}" class="btn btn-learn btn-learn-ifs">Learn the Science</a>
+                            <a href="ifu/" target="_blank" class="btn btn-launch btn-ifs">Launch Lab</a>
+                        </div>
                     </div>
                 </div>
             </div>
